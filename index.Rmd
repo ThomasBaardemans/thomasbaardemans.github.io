@@ -1,6 +1,6 @@
 
 ---
-title: "About me"
+title: "Thomas Baardemans"
 
 output:
   html_document:
