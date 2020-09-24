@@ -5,7 +5,7 @@ navbar:
     - text: "Home"
       href: index.html
     - text: "RNA-seq transcriptomic analysis"
-      href: rnaseq.html
+      href: Advanced_Bioinformatics_DESeq2.html
       
 
 output:
