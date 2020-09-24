@@ -1,0 +1,19 @@
+
+---
+title: "About me"
+
+output:
+  html_document:
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Welcome to my data science portfolio website. My name is Thomas Baardemans. On this website I post articles and code/projects I am currently working on. 
+This is my first attempt at building a github pages website. 
+
+This website is currently under construction. 
