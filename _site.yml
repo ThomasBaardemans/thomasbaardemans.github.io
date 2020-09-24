@@ -1,11 +1,11 @@
 name: "Thomas Baardemans"
 navbar:
   title: "Thomas Baardemans"
-  right:
+  left:
     - text: "Home"
       href: index.html
-    - text: "RNA-seq transcriptomic analysis using DESeq2"
-      href: Advanced_Bioinformatics_DESeq2.html
+    - text: "RNA-seq transcriptomic analysis"
+      href: rnaseq.html
       
 
 output:
