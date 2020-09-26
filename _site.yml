@@ -1,11 +1,17 @@
 name: "Thomas Baardemans"
 navbar:
-  title: "Thomas Baardemans"
+  title: Thomas Baardemans
   left:
-    - text: "Home"
-      href: index.html
-    - text: "RNA-seq transcriptomic analysis"
+    - text: "RNA-seq: background & bias"
+      icon: fa-dna fa-lg
       href: Advanced_Bioinformatics_DESeq2.html
+    - text: "Python scripts"
+      icon: fa-python fa-lg
+      href: Advanced_Bioinformatics_DESeq2.html
+  right: 
+    - icon: fa-linkedin fa-lg
+    href: https://nl.linkedin.com/in/thomas-baardemans 
+  type: inverse
       
 
 output:
