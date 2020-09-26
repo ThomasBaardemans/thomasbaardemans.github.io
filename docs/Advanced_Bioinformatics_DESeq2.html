@@ -16,7 +16,7 @@
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -26,6 +26,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <script src="site_libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -192,33 +194,33 @@ summary {
 <style type="text/css">
 /* padding for bootstrap navbar */
 body {
-  padding-top: 51px;
+  padding-top: 52px;
   padding-bottom: 40px;
 }
 /* offset scroll position for anchor links (for fixed navbar)  */
 .section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
+  padding-top: 57px;
+  margin-top: -57px;
 }
 .dropdown-submenu {
   position: relative;
@@ -437,15 +439,21 @@ div.tocify {
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-        <li>
-  <a href="index.html">Home</a>
-</li>
-<li>
-  <a href="Advanced_Bioinformatics_DESeq2.html">RNA-seq transcriptomic analysis</a>
-</li>
+        
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="Advanced_Bioinformatics_DESeq2.html">RNA-seq: background &amp; bias</a>
+</li>
+<li>
+  <a href="python.html">Python</a>
+</li>
+<li>
+  <a href="https://nl.linkedin.com/in/thomas-baardemans">
+    <span class="fa fa-linkedin"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -465,7 +473,7 @@ div.tocify {
 
 <h1 class="title toc-ignore"><strong>DESeq2 analysis: Method and Background</strong></h1>
 <h4 class="author"><em>Author:</em> Thomas Baardemans, <em>Supervisor:</em> Marc Teunis</h4>
-<h4 class="date">25-Sep-2020</h4>
+<h4 class="date">26-Sep-2020</h4>
 
 </div>
 
@@ -702,13 +710,13 @@ Figure x: estimation of size factor. source: mod stat mod bio chapter 8 fig 8.1.
 <p>The simplest example of a binomial distribution is the coin toss. binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. Each “cointoss” is called a Bernoulli trial.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co">#randomly generate 10 cointosses</span></span>
 <span id="cb12-2"><a href="#cb12-2"></a><span class="kw">rbinom</span>(<span class="dt">n =</span> <span class="dv">10</span>, <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.5</span>)</span>
-<span id="cb12-3"><a href="#cb12-3"></a><span class="co">##  [1] 1 1 1 1 0 1 1 1 1 0</span></span></code></pre></div>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co">##  [1] 0 1 0 1 1 0 1 1 1 1</span></span></code></pre></div>
 <p>exercise: Use rbinom to simulate 100 double rolls of a die. Where throwing 6 is considered “succes” and everything below a “fail”. The results should show a “1” when a single 6 has been rolled and “2” when both die rolled a 6.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co">#Answer:</span></span>
 <span id="cb13-2"><a href="#cb13-2"></a><span class="kw">rbinom</span>(<span class="dv">100</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
-<span id="cb13-3"><a href="#cb13-3"></a><span class="co">##   [1] 1 0 0 1 0 1 1 0 0 0 1 0 1 0 0 0 1 0 0 1 0 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0</span></span>
-<span id="cb13-4"><a href="#cb13-4"></a><span class="co">##  [38] 1 1 0 0 0 0 0 0 1 0 0 2 0 1 1 1 0 0 0 0 0 0 0 0 1 1 0 1 0 1 1 0 2 0 0 0 1</span></span>
-<span id="cb13-5"><a href="#cb13-5"></a><span class="co">##  [75] 1 0 0 1 0 0 0 1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0</span></span></code></pre></div>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="co">##   [1] 0 1 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0</span></span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="co">##  [38] 1 0 0 0 0 0 1 0 1 0 0 1 1 1 1 1 0 1 0 0 0 0 0 1 0 2 0 1 0 2 0 2 0 0 1 0 1</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="co">##  [75] 0 1 1 1 0 0 0 1 0 2 1 1 0 0 0 1 0 0 1 1 0 1 0 0 0 1</span></span></code></pre></div>
 <p>To get complete distribution of probabilities we use dbinom. note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability (d stands for distribution?). This also works with other statistical distributions as we will see later on in the lesson.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co">#probability that 6 is thrown twice.</span></span>
 <span id="cb14-2"><a href="#cb14-2"></a><span class="kw">dbinom</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
@@ -752,8 +760,8 @@ figure1: A barplot showing a poisson distribution. k = number of occurences, P(X
 <p>results/“random” generation. <strong>Misschien is het leuker om een stuk DNA uit het eerste gedeelte van de cursus te gebruiken en die met biostrings te analyseren of iets?</strong></p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">table</span>(<span class="kw">rpois</span>(<span class="dv">1000</span>, <span class="fl">0.312</span>))</span>
 <span id="cb19-2"><a href="#cb19-2"></a><span class="co">## </span></span>
-<span id="cb19-3"><a href="#cb19-3"></a><span class="co">##   0   1   2   3   6 </span></span>
-<span id="cb19-4"><a href="#cb19-4"></a><span class="co">## 729 229  37   4   1</span></span></code></pre></div>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="co">##   0   1   2   3   4 </span></span>
+<span id="cb19-4"><a href="#cb19-4"></a><span class="co">## 730 223  41   5   1</span></span></code></pre></div>
 </div>
 <div id="exercise-v1-flying-bomb.-guided-weapon-or-probably-just-poisson-distribution" class="section level2">
 <h2><span class="header-section-number">3.5</span> Exercise: V1 flying bomb. Guided weapon or probably just poisson distribution?</h2>

@@ -1,22 +1,19 @@
 name: "Thomas Baardemans"
 navbar:
   title: Thomas Baardemans
-  left:
+  right:
     - text: "RNA-seq: background & bias"
-      icon: fa-dna fa-lg
       href: Advanced_Bioinformatics_DESeq2.html
-    - text: "Python scripts"
-      icon: fa-python fa-lg
-      href: Advanced_Bioinformatics_DESeq2.html
-  right: 
-    - icon: fa-linkedin fa-lg
-    href: https://nl.linkedin.com/in/thomas-baardemans 
-  type: inverse
-      
+    - text: "Python"
+      href: python.html
+    - icon: fa-linkedin
+      href: https://nl.linkedin.com/in/thomas-baardemans 
+
+        
 
 output:
   html_document:
-    theme: cosmo
+    theme: spacelab
     highlight: tango
     
 output_dir: "docs"
