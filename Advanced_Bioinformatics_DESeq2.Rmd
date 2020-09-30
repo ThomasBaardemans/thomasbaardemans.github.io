@@ -26,8 +26,7 @@ knitr::opts_chunk$set(echo = TRUE, include = TRUE, warning = FALSE, message = FA
 
 ```{r}
 library(tidyverse)
-library(GEOquery)
-library(rnaseqGene)
+library(DESeq2)
 library(dplyr)
 library(SummarizedExperiment)
 library(airway)
@@ -35,9 +34,6 @@ library(here)
 library(biomaRt)
 library(gridExtra)
 ```
-
-
-Note: This is a project I am currently working on. It is not yet finished
 
 # **Introduction**
   
@@ -80,22 +76,53 @@ Now that the sequences of the reads are known they need to be mapped to a refere
 knitr::include_graphics(path = here::here("images", "stark2019_adapted.png"))
 ```
 
-
+**@Marc: over het toeschrijven van reads aan bepaalde isoforms is me nog niet helemaal duidelijk want: Je zou in bovenstaande afbeelding naar de unambiguous reads kunnen kijken om de verhouding tussen de 2 isoforms te bepalen en dan alle ambiguous reads verdelen aan de hand van die verhouding over de 2 isoforms. Maar dat zou niet echt eerlijk zijn want de laatste exon van transcript y is een stuk langer dus die heeft een stuk meer reads. Wordt hiervoor ge-corrigeerd? Er wordt over het algemeen toch niet gecorrigeerd voor genlengte? Wil je sowieso dat ik ook behandel dat langere genen dus meer reads krijgen? Reads per kilobase per million reads (RPKM) of bij paired ends sequencing: Fragments per kilobase per million(FPKM)**
 
 Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know wether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software(ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (mortazavi 2008, laatste zin is bijna helemaal ge-copy-pasted van bron --> misschien nog even omschrijven). 
 
+**@Marc: Alle unmapped reads die daarna nog overgebleven worden weggegooid toch?**
 
-All the reads are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. Throughout the course you will spend alot of time organizing the data 
+All the reads are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will lean how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
 
+```{r, eval = TRUE, include = TRUE}
+# Uncomment and run the next line to install using bioconductor:
+
+# BiocManager::install("airway")
+
+#load the package into R
+library(airway)
+
+#load the dataset:
+data(airway)
+
+#There should now be an "airway" object loaded into your global environment. 
+```
+
+The airway dataset has already been cleaned up and formed into a SummarizedExperiment ready for a differential expression analysis. Before we start analyzing it is important to first explore the dataset to see what we are actually working with. 
+
+Excercise 1: Inspect the airway dataset using the metadata(), assay() and colData() functions from the SummarizedExperiment package. Use these functions to answer the following questions:
+
+- What kind of cells have been used in the experiment? 
+- How does the assaydata relate to the coldata?
+- What are the experimental conditions? 
+
+open the codeblock to see the answers. 
+```{r}
+# Answer 1: airway smooth muscle cells (use metadata() function to see title and link to pubmed).
+
+# Answer 2: The columnnames of the assaydata are linked to rownames of the colData. So each row in the colData contains information about a sample (column in assaydata). 
+
+# Answer 3: Dex and cell. Read the pubmed abstract to get more info about dex. Because this dataset is only a subset of a bigger dataset there is also a variable called albut. All the samples untreated so its not an experimental group in our subset of the data. 
+```
 
 Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw
 
-# **Differential gene expression**
+# **Differential gene expression analysis**
 
 The mapping of the reads results in a counts table. This table reports the amount of times a read was mapped to a specific gene. These numbers quantify linearly to the abundance of mRNA in the sample (Mortazavi, A., Williams, B., McCue, K. et al. 2008). 
-Before we can run statistical test on the data there are a few steps to go through. These steps are included in the DESeq2 function. This function is basically a "wrapper" function that executes a number of other functions in the "background". The purpose of these functions is roughly the following:
+Before we can run statistical test on the data there are a few steps to go through. These steps are included in the DESeq2 function. DESeq2 is basically a "wrapper" function that executes a number of other functions in the "background". The purpose of these functions is roughly the following:
 
-- Estimation of size factor
+- Estimation of size factor 
 - Estimation of dispersion
 - Testing 
 
@@ -108,8 +135,6 @@ When comparing the readcounts of a gene between 2 experimental conditions we nee
 Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
 
 ```{r, echo = TRUE}
-#load dataset:
-data("airway")
 
 #Lets take a look at some of the assaydata
 head(assay(airway))
@@ -150,8 +175,9 @@ ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads, fill = dextrea
 ```
   
  
-In order to adjust for this effect you might propose to scale all reads so the total amount of reads will become equal between samples. This however is not 
+In order to adjust for this effect you might propose to scale all reads so the total amount of reads will become equal between samples. 
 
+**verhaal over regression komt hier zie figuur hieronder**
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: estimation of size factor. source: mod stat mod bio chapter 8 fig 8.1."}
 knitr::include_graphics(path =here::here("images", "chap7-rnaseq-normalization-1.png"))
@@ -182,7 +208,6 @@ ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads_adjust, fill = 
 
 
 ```{r}
-SummarizedExperiment()
 
 
 normalized_assay <- data.frame("SRR1039508" = assay(airway[,1])/1.0236476,
@@ -208,7 +233,7 @@ The control genes can come in 2 forms:
 - Housekeeping genes: These genes are essential for basic maintenance and function of the cell. Some of these are expressed at relatively constant rates. 
 
 
-```{r}
+```{r eval = FALSE, include = TRUE}
 #housekeeping genes
 # dds_adjusted_airway <- DESeq2::DESeqDataSetFromMatrix(assay(adjusted_airway),
 #                                             colData = colData(adjusted_airway),
@@ -277,7 +302,7 @@ barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3)
 ## Poisson distribution 
 
 *When the probability of success p is small and the number of trials n large, the binomial distribution B(n,p) can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np.*
-
+**(Stuk tussen haakjes is copy pasta uit mod stat mod bio. Nog even omschrijven. Maar is wel mooi omschreven.)** 
 
 ```{r, fig.cap="figure1: A barplot showing a poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda"}
 barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#2780e3", xlab = "k", ylab = "P(X=k")
@@ -397,16 +422,50 @@ chisq.test(x = bombdata, p = poissonexpectation)
 
 ```
 
-This result is in line with what we know about the V1 today: It could only be aimed in the general direction of London but not guided to a more specific target. 
+This result is in line with what we know about the V1 today: It could only be aimed in the general direction of London but not guided to a more specific target like a building or a block of buildings. 
 
 ## Gamma-Poisson: negative binomial distribution
 
-It turns out the Poisson distrubution alone does not accurately reflect the distribution of genes. The main problem is the lambda in poisson distributions: lambda = mean = variance. 
-To accurately model the data we need seperate parameters for mean and variance. 
+Now we have seen how a distribution can help in predicting the likelihood a measurement was fo
+
+It turns out the Poisson distrubution alone does not accurately reflect the distribution of genes. The main problem is the lambda parameter the in poisson distributions: lambda = mean = variance. 
+To accurately model the data we need a distribution that uses seperate parameters for mean and variance (dispersion).  
+
+Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately preditc the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). 
+
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
+
+ddsSE_airway <- DESeq2::DESeqDataSet(airway, design =  ~dex)
+keep <- rowSums(counts(ddsSE_airway)) >= 10
+ddsSE_airway <- ddsSE_airway[keep,]
+ddsDE_airway <- DESeq(ddsSE_airway)
+plotDispEsts(ddsDE_airway)
+```
 
 
 
-Estimating dispersion (also called variability or spread) of a gene is hard/impossible if you only have 4 samples per experiment group. RNA seq experiments are quite expensive so just adding samples is not really an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014).  
+```{r}
+dispersiondataframe <- data.frame(assay(ddsDE_airway)) %>%
+  mutate(disp = dispersions(ddsDE_airway))
+
+head(dispersiondataframe) 
+
+#use view(dispersiondataframe) and pick any gene you want. Here we choose ENSG00000033867
+barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000033867")))
+
+#negative binomial
+rnbinom(4, size = (0.027 * 865), mu = 865)
+
+sample <- rnbinom(3, size = 51, mu = 1000)
+
+qnbinom(sample, size = 51, mu = 1100)
+
+
+
+# mu = mean, size = dispersion. 
+barplot(dnbinom(0:200, size = 10, mu =  100))
+```
+
 
 
 
@@ -456,19 +515,6 @@ The result is a much clearer graph of relative differences in gene expression.
 
 The other parameter in the DESeq2 results is the lfcSE. This is short for Log2FoldChange Shrinkage Estimate. 
 Shrinking the data is done because genes with low counts have less "statistical information". 
-```{python}
-## before you can run this code you need to first install python and then install anaconda. When running this codeblock for the first time Rstudio will ask you if you want to install "reticulate". press yes to continue
-
-#installs miniconda
-
-#conda config --add channels conda-forge
-
-#conda config --add channels bioconda
-
-
-#conda create -n salmon salmon
-
-```
 
 ```{r}
 data(airway)
@@ -486,20 +532,11 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 ```
 
 
-## Binomial Wald Test
-
-
-# Exploring Results (histogram of p-values, MA/vulcan plot, PCA plot and Heatmap) 
-```{r}
-#test codechunk
-barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000179094")))
-```
-
 # Test voor transcript length bias:
 
-```{r}
-#annotate airway dataset with transcript length to check for transcript length bias. 
 
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x) A: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. B: After performing a log fold shrink the bias becomes magnified."}
+#annotate airway dataset with transcript length to check for transcript length bias. 
 data(airway)
 ddsSE_airway <- DESeq2::DESeqDataSet(airway, design =  ~dex+cell)
 keep <- rowSums(counts(ddsSE_airway)) >= 10
@@ -508,50 +545,30 @@ ddsDE_airway <- DESeq(ddsSE_airway)
 
 #biomart
 res <- results(ddsDE_airway)
+
 res$ensembl_gene_id <- rownames(res)
 
 ensembl <- useMart("ensembl")
 
 ensembl = useDataset("hsapiens_gene_ensembl", mart=ensembl)
 
-annot <- getBM(attributes= c('ensembl_gene_id', 'external_gene_name', 'transcript_length'), 
+annot <- getBM(attributes= c('ensembl_gene_id', 'transcript_length'), 
                mart = ensembl)
 
+annot <- annot %>%
+  group_by(ensembl_gene_id) %>%
+  summarise(transcript_length = mean(transcript_length)) %>% 
+  arrange(ensembl_gene_id)
 
 res <- left_join(as.data.frame(res), annot, by = "ensembl_gene_id")
-```
 
+res <- arrange(res, transcript_length) %>%
+  filter(transcript_length < 10000)
 
-```{r}
-percentagecalculator <- function(bin){
-  binres <- filter(res, transcript_length > bin, transcript_length < (bin+50))
-  nbinres <- nrow(binres)
-  perc_sig <- filter(binres, padj < 0.05)
-  npercres <- nrow(perc_sig)
-  percentage <- (npercres/nbinres)
-return(percentage)
-}
-
-allbins <- seq(0, 8900, 100)
-
-percentage_de <- sapply(allbins, percentagecalculator)
-
-length_bias <- data.frame(lengthoftranscript = allbins,
-           percentage = percentage_de)
-
-graph3 <- ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage)) + geom_point() + ylim(0,1)
-```
-
-
-```{r}
-res <- arrange(res, transcript_length)
-
-res <- filter(res, transcript_length < 10000)
-
-allbins <- seq(0, 152000, 2000)
+allbins <- seq(0, 21000, 500)
 
 percentagecalculator <- function(bin){
-  binres <- res[bin:(bin+1999),]
+  binres <- res[bin:(bin+499),]
   perc_sig <- filter(binres, padj < 0.05)
   npercres <- nrow(perc_sig)
   percentage <- (npercres/nrow(binres))
@@ -559,8 +576,8 @@ return(percentage)
 }
 
 lengthcalculator <- function(bin){
-  binres <- res[bin:(bin+1999),]
-  avg_length <- (sum(binres$transcript_length)/2000)
+  binres <- res[bin:(bin+499),]
+  avg_length <- (sum(binres$transcript_length)/500)
 return(avg_length)
 }
 
@@ -572,15 +589,45 @@ length_bias <- data.frame(lengthoftranscript = avg_length_de,
            percentage = percentage_de)
 
 
-ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage)) + geom_point()
+graph1 <- ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage)) + 
+  geom_point() + 
+  ylim(0,0.35) +
+  xlab("length of transcript (average bp of isoforms) ") + 
+  ylab("fraction differentially expressed (p < 0.05)")
 
-graph4 <- ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage)) + geom_point() + ylim(0,1)
+res <- lfcShrink(ddsDE_airway, coef="dex_untrt_vs_trt", type="apeglm")
 
+res$ensembl_gene_id <- rownames(res)
+
+res <- left_join(as.data.frame(res), annot, by = "ensembl_gene_id")
+
+res <- arrange(res, transcript_length) %>%
+  filter(transcript_length < 10000)
+
+percentage_de <- sapply(allbins, percentagecalculator)
+
+avg_length_de <- sapply(allbins, lengthcalculator)
+
+length_bias <- data.frame(lengthoftranscript = avg_length_de,
+           percentage = percentage_de)
+
+graph2 <- ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage, xlab = "lala")) + 
+  geom_point() + 
+  ylim(0,0.35) +
+  xlab("length of transcript (average bp of isoforms) ") + 
+  ylab("fraction differentially expressed (p < 0.05)")
+
+grid.arrange(graph1, graph2, ncol=2)
 ```
 
+
+
+# Exploring Results (histogram of p-values, MA/vulcan plot, PCA plot and Heatmap) 
 ```{r}
-#grid.arrange(graph1, graph2, graph3, graph4, ncol=4)
+#test codechunk
+barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000179094")))
 ```
+
 
 ```{r}
 # hoe het eigenlijkzou moeten die annotatie
@@ -588,6 +635,8 @@ annot <- annot[match(rownames(ddsDE_airway), annot$ensembl_gene_id),]
 
 all(rownames(ddsDE_airway) == annot$ensembl_gene_id)
 
-
 ```
+
+
+
 

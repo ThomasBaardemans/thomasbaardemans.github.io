@@ -13,8 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-
-
 Python script translating an RNA sequence to a protein sequence. 
 
 ```{python, eval = FALSE, echo = TRUE}
