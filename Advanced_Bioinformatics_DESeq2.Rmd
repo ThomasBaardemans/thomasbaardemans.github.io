@@ -25,6 +25,14 @@ knitr::opts_chunk$set(echo = TRUE, include = TRUE, warning = FALSE, message = FA
 ```
 
 ```{r}
+#install.packages("vcd")
+#install.packages("ade4")
+
+
+```
+
+
+```{r}
 library(tidyverse)
 library(DESeq2)
 library(dplyr)
@@ -33,6 +41,9 @@ library(airway)
 library(here)
 library(biomaRt)
 library(gridExtra)
+library(vcd)
+library(ade4)
+library(factoextra)
 ```
 
 # **Introduction**
@@ -61,34 +72,36 @@ knitr::include_graphics(path = here::here("images", "cDNA_library.png"))
 ## Next Generation Sequencing (NGS)  
 Most NGS machines can only sequence molecules up to about 300 basepairs so the larger cDNA's need to be fragmentated first. Next the fragments are ligated to adapters to attach the molecules to the nanowells in the flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide attached and the flowcell is imaged.
 
-Concept 1: Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
-When using RNA-seq the read depth takes on a different meaning: It is the ammount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts. 
+*Concept 1: Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
+When using RNA-seq the read depth takes on a different meaning: It is the ammount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts.* 
 
 Further reading: For a more in-depth understanding of the NGS method you can watch this video: https://www.ibiology.org/techniques/next-generation-sequencing/#part-1 (short read NGS starts at 06:46 and ends at 20:52).
 
-## Mapping reads and the challenges it poses
-Now that the sequences of the reads are known they need to be mapped to a reference genome and counted. Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduces every step that follows. Mapping the reads to the genome proves to be a harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
+## Mapping reads 
+Now that the sequences of the reads are known they need to be mapped to a reference genome and counted. Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be a harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Ambiguous reads present a problem in assigning a read to specific isoform. Even splice junction spanning reads can be ambiguous. Adapted from stark 2019"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Ambiguous reads present a problem in assigning a read to specific isoform. Even splice junction spanning reads can be ambiguous. Using the unambiguous reads an estimate can be made about isoform prevalence. Adapted from stark 2019"}
 knitr::include_graphics(path = here::here("images", "stark2019_adapted.png"))
 ```
 
-**@Marc: over het toeschrijven van reads aan bepaalde isoforms is me nog niet helemaal duidelijk want: Je zou in bovenstaande afbeelding naar de unambiguous reads kunnen kijken om de verhouding tussen de 2 isoforms te bepalen en dan alle ambiguous reads verdelen aan de hand van die verhouding over de 2 isoforms. Maar dat zou niet echt eerlijk zijn want de laatste exon van transcript y is een stuk langer dus die heeft een stuk meer reads. Wordt hiervoor ge-corrigeerd? Er wordt over het algemeen toch niet gecorrigeerd voor genlengte? Wil je sowieso dat ik ook behandel dat langere genen dus meer reads krijgen? Reads per kilobase per million reads (RPKM) of bij paired ends sequencing: Fragments per kilobase per million(FPKM)**
-
-Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know wether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software(ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (mortazavi 2008, laatste zin is bijna helemaal ge-copy-pasted van bron --> misschien nog even omschrijven). 
-
-All the readcounts are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will lean how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
+Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know whether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software(ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (mortazavi 2008, laatste zin is bijna helemaal ge-copy-pasted van bron --> misschien nog even omschrijven). 
 
 Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw
 
-```{r, eval = TRUE, include = TRUE}
+After assigning each read to a gene all the readcounts are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will lean how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
+
+
+```{r, eval = FALSE, include = TRUE, collapse = FALSE}
 # Uncomment and run the next line to install using bioconductor:
 
-# BiocManager::install("airway")
+BiocManager::install("airway")
 
 #load the package into R
 library(airway)
+```
 
+
+```{r, include = TRUE, collapse = FALSE}
 #load the dataset:
 data(airway)
 
@@ -97,7 +110,7 @@ data(airway)
 
 The airway dataset has already been cleaned up and formed into a SummarizedExperiment ready for a differential expression analysis. Before we start analyzing it is important to first explore the dataset to see what we are actually working with. 
 
-Excercise 1: Inspect the airway dataset using the metadata(), assay() and colData() functions from the SummarizedExperiment package. Use these functions to answer the following questions:
+Exercise 1: Inspect the airway dataset using the metadata(), assay() and colData() functions from the SummarizedExperiment package. Use these functions to answer the following questions:
 
 - What kind of cells have been used in the experiment? 
 - How does the assaydata relate to the coldata?
@@ -115,154 +128,14 @@ open the codeblock to see the answers.
 
 # **Differential gene expression analysis**
 
-The mapping of the reads results in a counts table. This table reports the amount of times a read was mapped to a specific gene. These numbers quantify linearly to the abundance of mRNA in the sample (Mortazavi, A., Williams, B., McCue, K. et al. 2008). 
-Before we can run statistical test on the data there are a few steps to go through. These steps are included in the DESeq2 function. DESeq2 is basically a "wrapper" function that executes a number of other functions in the "background". The purpose of these functions is roughly the following:
+Now we have our dataset loaded we can start to look for differences in expression between samples. However before we can run statistical test on the data there are a few steps to go through. These steps are included in the DESeq2 function. DESeq2 is basically a "wrapper" function that executes a number of other functions in the "background". The purpose of these functions is roughly the following:
 
 - Estimation of size factor 
 - Estimation of dispersion
 - Testing 
 
-In this chapter we will go through each step in turn and use the "airway" dataset to see what happens to the data throughout the analysis. 
+In this chapter we will go through each step in but before we get there we will dive into the binomial and poisson distributions distributions first. 
 
-
-## "Normalizing" the data (First step of DESeq2: Estimation of size factor)
-
-When comparing the readcounts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other biases. 
-Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
-
-```{r, echo = TRUE}
-
-#Lets take a look at some of the assaydata
-head(assay(airway))
-
-#some of the samples (columns in assaydata) are treated and some are not. To figure out which is which we take a look at the coldata
-colData(airway)
-```
-
-Now we know what is what we would like to know if both conditions have an equal amount of reads in them.
-
-```{r, echo = TRUE}
-#total reads per treatment.
-sum(assay(airway[,airway$dex == "trt"]))
-sum(assay(airway[,airway$dex == "untrt"]))
-
-```
-
-The difference is not huge. But its still 3.6 million reads less in the treated group. Could it be that the treated group has some genes downregulated? Or is something else going on?
-The difference becomes more apparent if we take a look at the individual samples (fig x). The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker growth or the samples might nog have an equal sequencing depth. 
-
-```{r}
-reads_per_sample <- data.frame(reads = c(sum(assay(airway[,1])), 
-                                         sum(assay(airway[,2])),
-                                         sum(assay(airway[,3])),
-                                         sum(assay(airway[,4])),
-                                         sum(assay(airway[,5])),
-                                         sum(assay(airway[,6])),
-                                         sum(assay(airway[,7])),
-                                         sum(assay(airway[,8]))),
-                               dextreatment = colData(airway)$dex 
-                                )  
-```
-
-
-```{r}
-ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads, fill = dextreatment)) +
-  geom_col()
-```
-  
- 
-In order to adjust for this effect you might propose to scale all reads so the total amount of reads will become equal between samples. 
-
-**verhaal over regression komt hier zie figuur hieronder**
-
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: estimation of size factor. source: mod stat mod bio chapter 8 fig 8.1."}
-knitr::include_graphics(path =here::here("images", "chap7-rnaseq-normalization-1.png"))
-```
-
-
-DESeq2 is a wrapper that will run multiple functions. The first of which is the "estimate size factors" function and it can also be run manually:
-```{r, echo = TRUE}
-estim <- DESeq2::estimateSizeFactorsForMatrix(assay(airway))
-```
-
-```{r}
-reads_per_sample <- mutate(reads_per_sample, 
-                           sizefactor = estim)
-
-reads_per_sample <- mutate(reads_per_sample,
-                           reads_adjust = reads_per_sample$reads/reads_per_sample$sizefactor)
-```
-
-
-
-
-```{r}
-ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads_adjust, fill = dextreatment)) +
-  geom_col()
-```
-
-
-```{r}
-normalized_assay <- data.frame("SRR1039508" = assay(airway[,1])/1.0236476,
-                               "SRR1039509" = assay(airway[,2])/0.8961667,
-                               "SRR1039512" = assay(airway[,3])/1.1794861,
-                               "SRR1039513" = assay(airway[,4])/0.6700538,
-                               "SRR1039516" = assay(airway[,5])/1.1776714,
-                               "SRR1039517" = assay(airway[,6])/1.3990365,
-                               "SRR1039520" = assay(airway[,7])/0.9207787,
-                               "SRR1039521" = assay(airway[,8])/0.9445141)
-
-normalized_assay <- round(normalized_assay)
-
-
-
-```
-
-As you can see the range of total reads has drastically decreased. All samples now have between 20 and about 22,5 million total reads.  
-
-Note: if you look at the help page of estimateSizeFactorsForMatrix you might notice the function also accepts an optional argument called controlGenes. 
-The control genes can come in 2 forms: 
-
-- Spike-in genes: These are artificial mRNA sequences that can be added in a known quantity to the sample.
-- Housekeeping genes: These genes are essential for basic maintenance and function of the cell. Some of these are expressed at relatively constant rates. 
-
-
-```{r eval = FALSE, include = TRUE}
-#housekeeping genes
-# dds_adjusted_airway <- DESeq2::DESeqDataSetFromMatrix(assay(adjusted_airway),
-#                                             colData = colData(adjusted_airway),
-#                                             design=~dex+cell)
-
-
-#quick biomart anotating
-ensembl <- useMart("ensembl")
-
-ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
-
-annot <- getBM(attributes= c('ensembl_gene_id', 'external_gene_name'), 
-               mart = ensembl)
-
-
-
-normalized_assay <- tibble::rownames_to_column(normalized_assay, "ensembl_gene_id")
-normalized_assay <- left_join(normalized_assay, annot, by = "ensembl_gene_id")
-head(normalized_assay)
-
-
-
-#some housekeeping genes proposed for calibration by Eisenberg_Levanon_2013
-housekeeping_genes <- c("VCP", "EMC7", "REEP5", "PSMB2")
-normalized_assay[which(normalized_assay$external_gene_name %in% housekeeping_genes),]
-
-```
-
-Note: although this step is often called normalization it actually does not have anything to do with normal distribution. 
-
-## Estimating dispersion (second step of DESeq2)  
-
-When a variable has a countable number of values it is said to be a discrete value.
-These values follow discrete probability distributions.
- 
 
 ## Binomial distribution
 
@@ -304,7 +177,7 @@ barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#2780e3", xlab = "
 
 If we look at figure 1 there is an event with a $\lambda$ of 6. $\lambda$ might represent the number of letters someone has received on average each day for the last month. If we were to look at the mail that arrived on a given day there is a chance of 0.04 (P) of us counting 2 (k) pieces of mail. 
 
-A good example of a Poisson distribution is the mutation rate of DNA. If we want to know the amount of mutations we can we are likely to find in 1 kb of DNA we start with determining the $\lambda$ (event rate). In this hypothetical example we examine 1 mb and find 312 mutations. So $\lambda$ = 312/1000 = 0.312. To calculate the chance we find 3 mutation in 1 kb of DNA we can use the following poisson formula 
+A good example of a Poisson distribution is the mutation rate of DNA. If we want to know the amount of mutations we can we are likely to find in 1 kb of DNA we start with determining the $\lambda$ (event rate / poisson mean). In this hypothetical example we examine 1 mb and find 307 mutations. So $\lambda$ = 312/1000 = 0.307. To calculate the chance we find 3 mutation in 1 kb of DNA we can use the following poisson formula 
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
   <mi>P</mi>
@@ -337,38 +210,64 @@ A good example of a Poisson distribution is the mutation rate of DNA. If we want
   <mo>.</mo>
 </math>
 
-So in this formula we input $\lambda$ = 0.312, $\kappa$ = 3. Note that the ! represents a factorial: n! = n * (n-1) * (n-2) ...
+So in this formula we input $\lambda$ = 0.307, $\kappa$ = 3. Note that the ! represents a factorial: n! = n * (n-1) * (n-2) ...
 So our k! = 3*2*1 = 6. In R we can use this formula as follows: 
 
 ```{r, echo = TRUE}
-0.312^3 * exp(-0.312) / factorial(3)
+0.312^3 * exp(-0.307) / factorial(3)
 
 # However there is a function in R that will work equally well:
 
-dpois(x = 3, lambda = 0.312)
+dpois(x = 3, lambda = 0.307)
 
 ```
 
-so there is a probability 0.0037 that a given kb contains 3 mutations. So we expect to find about 4 sections of DNA to contain 3 mutations. 
+so there is a probability 0.0035 that a given kb contains 3 mutations. So we expect to find about 4 sections of DNA to contain 3 mutations. 
 To get P(X=k) for all the other k values we can change the code slightly:
 
 ```{r}
-dpois(x = 0:4, lambda = 0.312)
+mutationprobability <- dpois(x = 0:4, lambda = 0.307)
+mutationprobability 
+
+# Before we can do the chisq.test we need to know all probabilities so that they sum to 1. We can do is by calculating the probability of 5+ mutations. The easiest way to do this is to subtract the probabilities of 0-4 mutations from 1. 
+mutationprobability <- c(mutationprobability, 1-sum(mutationprobability))
+
 ```
 
-and plot these values
+and  we can also plot these values to get a visual of the distribution
 ```{r}
-barplot(dpois(x = 0:4, lambda = 0.312), names.arg = 0:4, col = "#2780e3", xlab = "k", ylab = "P(X=k")
+barplot(dpois(x = 0:4, lambda = 0.307), names.arg = 0:4, col = "#2780e3", xlab = "k", ylab = "P(X=k)")
 ```
 
+Now after fragmenting the DNA in kb pieces and sequencing them we get the following results:
 
-results/"random" generation. **Misschien is het leuker om een stuk DNA uit het eerste gedeelte van de cursus te gebruiken en die met biostrings te analyseren of iets?**
 ```{r}
-table(rpois(1000, 0.312))
+mutationresults <- c(740, 218, 37, 5, 0, 0)
+
+options(digits = 3)
+knitr::kable(data.frame("mutations per kb" = c("0", "1", "2", "3", "4", "5+"),
+                        "expected number of fragments" = mutationprobability *1000,
+                        "observed number of fragments" = mutationresults), 
+             align = "c", row.names = FALSE, 
+             col.names = c("mutations per kb", "expected number of fragments", "observed number of fragments"),
+             caption = "Results")
+options(digits = 10)
 ```
 
 
-## Exercise: V1 flying bomb. Guided weapon or probably just poisson distribution? 
+The results look fairly close to the expected results if the mutationrate of DNA follows a poisson distribution. We can test this using a chi-squared test.
+The chi-squared test determines whether there is a statistically significant difference between expected frequencies and observed frequencies.
+
+H0: Observed frequencies follow expected frequencies, the mutationrate of DNA follows a poisson distrubution.
+H1: Obserced frequencies do not follow expected frequencies, the mutationrate of DNA does not follow a poisson distribution
+```{r}
+chisq.test(x = mutationresults, p = mutationprobability)
+```
+
+the p-value > 0.05 so we accept H0.
+
+
+## Exercise: V1 flying bomb. Guided weapon or does something smell a bit fishy? 
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 1: Illustration of a V1 flying bomb. The V stands for 'vergeltungswaffen' (vengeance weapon) and was used to terrorize London civilians in the second world war."}
 knitr::include_graphics(path =here::here("images", "V1_cutaway.JPG"))
@@ -418,17 +317,169 @@ chisq.test(x = bombdata, p = poissonexpectation)
 
 This result is in line with what we know about the V1 today: It could only be aimed in the general direction of London but not guided to a more specific target like a building or a block of buildings. 
 
-## Most
+## Maximum likelihood estimation
+
+So far we have used a top-down approach. We had a big dataset with a known lambda and we compared it to the distribution with the same lambda. 
+Sometimes there are not enough datapoints to simply take the mean and use this as a lambda. 
+
+**Exercise x: Use rpois to generate 3 numbers with a lambda of your choosing?. Calculate the mean of the 3 numbers. Does it approach the chosen lambda used to generate the dataset? Try again but now generate 1000 numbers** 
+
+```{r}
+#You can run this code multiple times. This way the seed will progress.
+mean(rpois(3, 100))
+
+mean(rpois(1000, 100))
+```
+
+When working with RNA-seq datasets we often only have 3 replicates. So when trying to estimate the lambda of a gene from 3 datapoints taking the mean will not be very accurate. 
+
+**@Marc: Hier gaat het even de fout in. Ik wil dus de likelihood estimation gaan uitleggen zoals hij omschreven staat in hoofdstuk 2.3 van modern statistics for modern biology. Daar staat een hele uitleg met formules en dingen om de most likely lambda in te schatten. Ik dacht dus eigenlijk dat dat dan accurater zou moeten zijn dan gewoon het gemiddelde te pakken wanneer je maar een paar datapunten hebt. Maar nu kom ik erachter dat de max likelihood iedere keer op exact hetzelfde getal uitkomt als het gemiddelde van de observaties.... zie onderstaande code...**
+
+```{r}
+
+# To get a sample dataset I used rpois(3, 100) to generate 3 numbers. You can generate another sample set and follow along with that if you like
+#$observations <- c(103, 83, 91)
+
+observations <- rpois(3, 100) 
+
+mean(observations)
+
+gf  =  goodfit(observations, "poisson", method = "ML")
+gf$par
+
+# mmm maximum likelihood is nu eigenlijk gewoon de mean. Of misschien doe ik iets fout. 
+```
 
 
-## Gamma-Poisson: negative binomial distribution
+## Estimation of size factor: "Normalizing" the data 
 
-Now we have seen how a distribution can help in predicting the likelihood a measurement was fo
+When comparing the readcounts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other biases. 
+Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
 
-It turns out the Poisson distrubution alone does not accurately reflect the distribution of genes. The main problem is the lambda parameter the in poisson distributions: lambda = mean = variance. 
-To accurately model the data we need a distribution that uses seperate parameters for mean and variance (dispersion).  
+```{r, echo = TRUE}
 
-Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). 
+#Lets take a look at some of the assaydata
+head(assay(airway))
+
+#some of the samples (columns in assaydata) are treated and some are not. To figure out which is which we take a look at the coldata
+colData(airway)
+```
+
+Now we know what is what we would like to know if both conditions have an equal amount of reads in them.
+
+```{r, echo = TRUE}
+#total reads per treatment.
+sum(assay(airway[,airway$dex == "trt"]))
+sum(assay(airway[,airway$dex == "untrt"]))
+
+```
+
+The difference is not huge. But its still 3.6 million reads less in the treated group. Could it be that the treated group has some genes downregulated? Or is something else going on?
+The difference becomes more apparent if we take a look at the individual samples (fig x). The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker growth or the samples might nog have an equal sequencing depth. 
+
+```{r}
+#create a dataframe with the total reads of all samples and their treatment. 
+reads_per_sample <- data.frame(reads = c(sum(assay(airway[,1])), 
+                                         sum(assay(airway[,2])),
+                                         sum(assay(airway[,3])),
+                                         sum(assay(airway[,4])),
+                                         sum(assay(airway[,5])),
+                                         sum(assay(airway[,6])),
+                                         sum(assay(airway[,7])),
+                                         sum(assay(airway[,8]))),
+                               dextreatment = colData(airway)$dex 
+                                )  
+```
+
+
+```{r}
+ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads, fill = dextreatment)) +
+  geom_col()
+```
+  
+ 
+In order to adjust for this effect we need to scale the reads so the total amount of reads will become (more) equal between samples. 
+To do this we calculate a size factor. We could take the total reads of sample 2 and divide by the total reads of sample 1.
+320/260 = 1.231. We could use this size factor to correct the reads of each genes so that the total number of reads in each sample will become equal. 
+This method is flawed as we can see in figure x. The blue line represents the size factor we just calculated. Using this size factor implies gene A,B,D and E are upregulated and gene C is downregulated. However this is not likely the case. It is more likely that  A,B,D and E are present in equal amounts in both samples and gene C is downregulated in sample 2. The higher countnumber of A,B,D and E is a result of the difference in read depth. If we plot a regression line through these points (red line) we get a more exact size factor that estimates only the difference in read depth and not the difference in expression of genes (If lots of genes are upregulated it is expected to find more mRNA's in a cell overall). In this hypothetical dataset the sizefactor calculated by the red line is 1.5.  This last method is what DESeq2 uses to estimate the size factor.
+
+
+```{r, echo = FALSE, fig.align='center', out.width='75%', fig.cap="Figure x: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: mod stat mod bio chapter 8 fig 8.1."}
+szfcDemo = data.frame(
+  x = c(2, 4, 6, 6,  8) * 10,
+  y = c(3, 6, 2, 9, 12) * 10,
+  name = LETTERS[1:5],
+  check.names = FALSE)
+slopes =  c(
+  blue = with(szfcDemo, sum(y) / sum(x)),
+  red = szfcDemo[, c("x", "y")] %>% as.matrix %>%
+    (DESeq2::estimateSizeFactorsForMatrix) %>% (function(x) x[2]/x[1]) %>% as.vector)
+ggplot(szfcDemo, aes(x = x, y = y, label = name)) + geom_point() +
+  coord_fixed() + xlim(c(0, 128)) + ylim(c(0, 128)) + xlab("reads sample 1 (total reads = 260)") + ylab("reads sample 2 (total reads = 320)") +
+  geom_text(hjust= 0.5, vjust = -0.6) +
+  geom_abline(slope = slopes[1], col = names(slopes)[1]) +
+  geom_abline(slope = slopes[2], col = names(slopes)[2])
+```
+
+
+As we discussed earlier DESeq2 is a wrapper function. The functions within it can often be called separately like the size-factor-estimation function.
+
+```{r, echo = TRUE}
+#estimate the sizefactors and return them
+estim <- DESeq2::estimateSizeFactorsForMatrix(assay(airway))
+
+#mutate the size factor into the dataframe
+reads_per_sample <- mutate(reads_per_sample, 
+                           sizefactor = estim)
+
+#calculate the adjusted reads using the sizefactor.
+reads_per_sample <- mutate(reads_per_sample,
+                           reads_adjust = reads_per_sample$reads/reads_per_sample$sizefactor)
+```
+
+```{r}
+ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads_adjust, fill = dextreatment)) +
+  geom_col()
+```
+
+
+```{r, include = FALSE, eval = FALSE}
+# miss later nog nodig. zoniet dan kan hij weg. 
+normalized_assay <- data.frame("SRR1039508" = assay(airway[,1])/1.0236476,
+                               "SRR1039509" = assay(airway[,2])/0.8961667,
+                               "SRR1039512" = assay(airway[,3])/1.1794861,
+                               "SRR1039513" = assay(airway[,4])/0.6700538,
+                               "SRR1039516" = assay(airway[,5])/1.1776714,
+                               "SRR1039517" = assay(airway[,6])/1.3990365,
+                               "SRR1039520" = assay(airway[,7])/0.9207787,
+                               "SRR1039521" = assay(airway[,8])/0.9445141)
+
+normalized_assay <- round(normalized_assay)
+
+
+
+```
+
+As you can see the range of total reads has drastically decreased. All samples now have between 20 and about 22,5 million total reads.
+
+Note: if you look at the help page of estimateSizeFactorsForMatrix you might notice the function also accepts an optional argument called controlGenes. 
+The control genes can come in 2 forms: 
+
+- Spike-in genes: These are artificial mRNA sequences that can be added in a known quantity to the sample.
+- Housekeeping genes: These genes are essential for basic maintenance and function of the cell. Some of these are expressed at relatively constant rates. 
+
+## Estimating dispersion (second step of DESeq2) and negative binomial distribution  
+
+At first it was believed that the expression of a gene followed a poisson distribution. 
+It turned out however that this was only the case when evaluating samples that were technical replicates. 
+
+The main problem with the poisson distribution is the lambda parameter because in this distribtion: lambda = mean = variance. 
+To accurately model the data we need a distribution that uses seperate parameters for mean and variance (dispersion). 
+This is where the negative binomial distribution comes in. It accepts these parameters and is used by DEseq to model the data. 
+Before we can use this distribution however we do need to find out what these 2 parameters are. 
+The mean is simple enough but what about the dispersion parameter?
+
+Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then "shrinks" the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure x).
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
 
@@ -439,14 +490,20 @@ ddsDE_airway <- DESeq(ddsSE_airway)
 plotDispEsts(ddsDE_airway)
 ```
 
-To get the 
+To get the calculated dispersion we can use the dispersions() function: 
 
 ```{r}
 dispersiondataframe <- data.frame(assay(ddsDE_airway)) %>%
   mutate(disp = dispersions(ddsDE_airway))
 
-head(dispersiondataframe) 
+head(dispersiondataframe)
+```
 
+
+
+
+
+```{r}
 #use view(dispersiondataframe) and pick any gene you want. Here we choose ENSG00000033867
 barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000033867")))
 
@@ -473,6 +530,34 @@ barplot(dnbinom(0:200, size = 10, mu =  100))
 
 
 
+```{r}
+sample1 <- rnbinom(100, size = (0.027 * 865), mu = 865)
+sample2 <- rnbinom(4, size = (0.027 * 1312), mu = 1312)
+
+sample1
+sample2
+
+
+```
+
+
+# Exploring results
+
+## Histogram of p-values
+
+The first plot is a histogram of p-values. The left peak is the number of genes with a p < 0.01.
+This plot gives us the possibility to make a rough estimation of the False Discovery Rate (FDR). 
+Because we are looking at so many genes there are bound to be some genes that just happen to be differentially expressed. Looking at the area to the right of p > 0.05 we get an idea of the scale of this "background". 
+
+For example: If we look at the background we see that about 175-200 genes happen to have a p-value of 0.75. The same goes for most p-values > 0.10. So it is likely that about 175-200 genes in the left peak just happen to be differentially expressed regardless of the experimental condition. About 2900 genes in total have a p < 0.01. 
+200/2900 = 0.068. So about 7% of our differentially expressed genes are false positives (type I error). 
+
+```{r}
+res <- results(ddsDE_airway)
+  
+ggplot(as(res, "data.frame"), aes(x = pvalue)) +
+  geom_histogram(binwidth = 0.01, fill = "Royalblue", boundary = 0)
+```
 
 
 ## Log2 fold change and shrinkage
@@ -520,7 +605,8 @@ notice that due to the logarithmic scaling a gene with a fold change of 8 has a 
 The result is a much clearer graph of relative differences in gene expression. 
 
 The other parameter in the DESeq2 results is the lfcSE. This is short for Log2FoldChange Shrinkage Estimate. 
-Shrinking the data is done because genes with low counts have less "statistical information". 
+Shrinking the data is done because genes with low counts have less "statistical information". The effect of this shrinkage is usually visualized using a MA plot. 
+Shrinkage is estimated using a Empirical Bayes method. Bayesian statistics fall outside of the scope for this lesson but learning about it is time well-spent.  
 
 ```{r}
 data(airway)
@@ -538,13 +624,61 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 ```
 
 
+## Principal Component Analysis
+
+```{r, eval = FALSE, include = FALSE}
+
+load(file = here::here("data", "athletes.RData"))
+
+head(athletes)
+
+```
+
+
+
+
+```{r}
+#principal component analysis
+ddsDE_rlog_airway <- ddsDE_airway %>%
+  rlogTransformation() 
+
+
+ddsDE_rlog_airway %>%
+  DESeq2::plotPCA(intgroup = c("dex", "cell")) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
+```
+
+
+```{r, eval = FALSE, include = FALSE}
+scaled_athletes <- scale(athletes) %>% round(1)
+head(scaled_athletes)
+
+pca.ath = dudi.pca(athletes, scannf = FALSE)
+pca.ath$eig
+
+fviz_eig(pca.ath, geom = "bar", bar_width = 0.3) + ggtitle("")
+
+fviz_pca_biplot(athletes, geom = "point",
+   col.var = "violet", addEllipses = TRUE, ellipse.level = 0.69) +
+   ggtitle("") + coord_fixed()
+
+```
+
+
+
+
+## Heat map
+
+
+
 # Transcript length bias
 
 A much overlooked bias is the transcript length bias. This bias is the result of longer mRNA molecules being broken up into more fragments than shorter mRNA's. This results in overrepresentation of longer genes *within* samples. 
 It is possible to correct for this within sample variation but doing so introduces variation between samples. Since we are usually interested in the differential expression of genes between samples we choose to leave the transcript length bias as is.   
 However it is important to be aware of its presence.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM)."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: mortazavi 2008"}
 knitr::include_graphics(path =here::here("images", "mortazavi2008_transcript_length_bias.jpg"))
 ```
 
