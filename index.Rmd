@@ -1,6 +1,6 @@
 
 ---
-title: "Thomas Baardemans"
+title: ""
 
 output:
   html_document:
@@ -12,8 +12,24 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+```{r, echo=FALSE, include=TRUE, out.width='25%', out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics(path = here::here("images", "portrait_hex.png"))
+```
+  
 
-Welcome to my data science portfolio website. My name is Thomas Baardemans. On this website I post articles and code/projects I am currently working on. 
-This is my first attempt at building a github pages website. 
+## Welcome to my data science portfolio website.  
 
-This website is currently under construction. 
+On this website I post articles and code/projects I am currently working on. Currently I am set to graduate before November 2020 as a biotechnician from the Hogeschool Utrecht. 
+The highlights of my education so far include:  
+
+* *In Vivo:* In my 3rd year I specialized in zoology and performed a multitude of laboratory animal procedures. Part of this specialization was a year-long internship at the Netherlands Institute for Neuroscience.  
+* *In Vitro:* I have a great interest in molecular biology. Throughout the 4 years of study I gained practical experience in numerous molecular techniques such as the production of recombinant DNA vectors and transfection into cells. Other techniques include but are not limited to PCR, ELISA, western blot and cell culture.
+* *In Silico:* For my minor I attended bio-informatics courses. [*Name:* **Thomas Baardemans** ]{style="float:right"}  
+These were mostly centered around the R language and ranged from  [*Education:* **Life Sciences (Hogeschool Utrecht)**]{style="float:right"}
+basic data analysis to interpretation of RNA-seq results. I use Shiny to develop[*Location:* **Utrecht, Netherlands**]{style="float:right"}  
+applications and hope to use this together with python in the lab to develop  [*Mail:* **thomas.baardemans at gmail.com**]{style="float:right"} 
+data-acquisition tools/scripts. 
+ 
+
+For a more in-depth review of my experience so far please contact me on linkedin or email.
+

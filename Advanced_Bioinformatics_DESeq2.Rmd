@@ -60,17 +60,17 @@ a dataset is submitted to the GEO website. This process can be repeated byb down
 This step is not part of this course and we will start with the raw counts of each gene.
 
 ## Experimental design
-Cell cultures can be harvested or biopts can be taken from animals or patients. The minimal design has at least 1 experimental variable and 3 replications (samples) per group. Careful consideration of replication number is advised though since a study using 42 replications per group has shown that using just 3 replications only identifies 20-40% of differentially expressed genes depending on the tool used (Schurch, Nicholas J et al. 2016). To identify >85% of genes regardless of fold change 20 replications are required (fold change is a quantative measure of difference. See chapter ...). They conclude at least 6-12 replications are recommended. 
+Cell/Bacteria cultures can be harvested or biopts can be taken from animals or patients. The minimal design has at least 1 experimental variable and 3 replications (samples) per group. Careful consideration of replication number is advised though since a study using 42 replications per group has shown that using just 3 replications only identifies 20-40% of differentially expressed genes depending on the tool used (Schurch, Nicholas J et al. 2016). To identify >85% of genes regardless of fold change 20 replications are required (fold change is a quantative measure of difference. See chapter ...). They conclude at least 6-12 replications are recommended. Because scientists often want to maximize the amount of experimental conditions most of the datasets contain 3 replications.  
 
 ## Library preparation.
-After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library.     
+After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library. The fragmentation is neccesary because most Next Generation Sequencing machines can only sequence molecules up to 300 basepairs.    
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: cDNA library synthesis. adapted from: Overview of RNA seq tech from illumina website"}
 knitr::include_graphics(path = here::here("images", "cDNA_library.png"))
 ```
 
 ## Next Generation Sequencing (NGS)  
-Most NGS machines can only sequence molecules up to about 300 basepairs so the larger cDNA's need to be fragmentated first. Next the fragments are ligated to adapters to attach the molecules to the nanowells in the flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide attached and the flowcell is imaged.
+After cDNA synthesis the fragments are ligated to adapters to attach the molecules to the nanowells in a flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide attached and the flowcell is imaged.
 
 *Concept 1: Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
 When using RNA-seq the read depth takes on a different meaning: It is the ammount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts.* 
@@ -78,7 +78,7 @@ When using RNA-seq the read depth takes on a different meaning: It is the ammoun
 Further reading: For a more in-depth understanding of the NGS method you can watch this video: https://www.ibiology.org/techniques/next-generation-sequencing/#part-1 (short read NGS starts at 06:46 and ends at 20:52).
 
 ## Mapping reads 
-Now that the sequences of the reads are known they need to be mapped to a reference genome and counted. Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be a harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
+Now that the sequences of the reads are known they need to be mapped to a reference genome and counted (each cDNA fragment that is sequenced is usually reffered to as a "read" or a "count"). Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Ambiguous reads present a problem in assigning a read to specific isoform. Even splice junction spanning reads can be ambiguous. Using the unambiguous reads an estimate can be made about isoform prevalence. Adapted from stark 2019"}
 knitr::include_graphics(path = here::here("images", "stark2019_adapted.png"))
@@ -229,7 +229,7 @@ To get P(X=k) for all the other k values we can change the code slightly:
 mutationprobability <- dpois(x = 0:4, lambda = 0.307)
 mutationprobability 
 
-# Before we can do the chisq.test we need to know all probabilities so that they sum to 1. We can do is by calculating the probability of 5+ mutations. The easiest way to do this is to subtract the probabilities of 0-4 mutations from 1. 
+# To get the probability that there are 5 or more mutations in a kb we can simply subtract the sum of probabilities 0:4 from the number 1. We will need this later to perform a chi-squared test.
 mutationprobability <- c(mutationprobability, 1-sum(mutationprobability))
 
 ```
@@ -254,12 +254,11 @@ knitr::kable(data.frame("mutations per kb" = c("0", "1", "2", "3", "4", "5+"),
 options(digits = 10)
 ```
 
-
 The results look fairly close to the expected results if the mutationrate of DNA follows a poisson distribution. We can test this using a chi-squared test.
 The chi-squared test determines whether there is a statistically significant difference between expected frequencies and observed frequencies.
 
 H0: Observed frequencies follow expected frequencies, the mutationrate of DNA follows a poisson distrubution.
-H1: Obserced frequencies do not follow expected frequencies, the mutationrate of DNA does not follow a poisson distribution
+H1: Observed frequencies do not follow expected frequencies, the mutationrate of DNA does not follow a poisson distribution
 ```{r}
 chisq.test(x = mutationresults, p = mutationprobability)
 ```
@@ -273,7 +272,7 @@ the p-value > 0.05 so we accept H0.
 knitr::include_graphics(path =here::here("images", "V1_cutaway.JPG"))
 ```
 
-Poisson distributions occur in all kinds of unexpected places. During World War 2 the german army developed a flying bomb (V1 and later V2) to terrorize civilians in London. The impact sites of these bombs tended to be grouped in clusters. This made the English wonder whether these clusters were the result of some aiming mechanism on the bombs or if it was just chance. Statistician R. D. Clarke set out to tackle this problem (clarke1946). He selected a 144 km^2^area on the map of south London and divided it in 576 squares of 0,25 km^2^. Counting the recorded impacts over the last x months Clarke determined there had been 537 impacts of flying bombs in the selected area.    
+Poisson distributions occur in all kinds of unexpected places. During World War 2 the German army developed a flying bomb (V1 and later V2) to terrorize civilians in London. The impact sites of these bombs tended to be grouped in clusters. This made the English wonder whether these clusters were the result of some aiming mechanism on the bombs or if it was just chance. Statistician R. D. Clarke set out to tackle this problem (clarke1946). He selected a 144 km^2^area on the map of south London and divided it in 576 squares of 0,25 km^2^. Counting the recorded impacts over the last x months Clarke determined there had been 537 impacts of flying bombs in the selected area.    
 
 **Question 1: Use the information given above to calculate the probabilities that a given square had 0,1,2,3,4 or 5+ impacts if the impacts were distributed according Poisson probabillity. Click the "code" button to reveal the answer.**
 
@@ -332,7 +331,6 @@ mean(rpois(1000, 100))
 ```
 
 When working with RNA-seq datasets we often only have 3 replicates. So when trying to estimate the lambda of a gene from 3 datapoints taking the mean will not be very accurate. 
-
 **@Marc: Hier gaat het even de fout in. Ik wil dus de likelihood estimation gaan uitleggen zoals hij omschreven staat in hoofdstuk 2.3 van modern statistics for modern biology. Daar staat een hele uitleg met formules en dingen om de most likely lambda in te schatten. Ik dacht dus eigenlijk dat dat dan accurater zou moeten zijn dan gewoon het gemiddelde te pakken wanneer je maar een paar datapunten hebt. Maar nu kom ik erachter dat de max likelihood iedere keer op exact hetzelfde getal uitkomt als het gemiddelde van de observaties.... zie onderstaande code...**
 
 ```{r}
@@ -347,7 +345,7 @@ mean(observations)
 gf  =  goodfit(observations, "poisson", method = "ML")
 gf$par
 
-# mmm maximum likelihood is nu eigenlijk gewoon de mean. Of misschien doe ik iets fout. 
+# mmm maximum likelihood komt op hetzelfde uit als de mean. Of misschien doe ik iets fout. 
 ```
 
 
@@ -443,23 +441,6 @@ ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads_adjust, fill = 
 ```
 
 
-```{r, include = FALSE, eval = FALSE}
-# miss later nog nodig. zoniet dan kan hij weg. 
-normalized_assay <- data.frame("SRR1039508" = assay(airway[,1])/1.0236476,
-                               "SRR1039509" = assay(airway[,2])/0.8961667,
-                               "SRR1039512" = assay(airway[,3])/1.1794861,
-                               "SRR1039513" = assay(airway[,4])/0.6700538,
-                               "SRR1039516" = assay(airway[,5])/1.1776714,
-                               "SRR1039517" = assay(airway[,6])/1.3990365,
-                               "SRR1039520" = assay(airway[,7])/0.9207787,
-                               "SRR1039521" = assay(airway[,8])/0.9445141)
-
-normalized_assay <- round(normalized_assay)
-
-
-
-```
-
 As you can see the range of total reads has drastically decreased. All samples now have between 20 and about 22,5 million total reads.
 
 Note: if you look at the help page of estimateSizeFactorsForMatrix you might notice the function also accepts an optional argument called controlGenes. 
@@ -499,45 +480,33 @@ dispersiondataframe <- data.frame(assay(ddsDE_airway)) %>%
 head(dispersiondataframe)
 ```
 
-
-
-
+## Binomial wald test
 
 ```{r}
 #use view(dispersiondataframe) and pick any gene you want. Here we choose ENSG00000033867
 barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000033867")))
 
-
-test <- tibble(ensembl_id = c("SRR1039508", "SRR1039512", "SRR1039516", "SRR1039520", "SRR1039509", "SRR1039513", "SRR1039517", "SRR1039521"),
-       counts = c(2642, 3493, 3405, 3407, 1247, 1206, 1999, 2658 ),
-       dex = c("untrt", "untrt", "untrt", "untrt", "trt", "trt", "trt", "trt"))
-
-
-#negative binomial
-rnbinom(4, size = (0.027 * 865), mu = 865)
-
-barplot(dnbinom(800:1000, size = (0.027 * 865), mu = 865))
-
-sample <- rnbinom(3, size = 51, mu = 1000)
-
-qnbinom(sample, size = 51, mu = 1100)
-
-
-
-# mu = mean, size = dispersion. 
-barplot(dnbinom(0:200, size = 10, mu =  100))
+# Dit stukje wil ik graag gebruiken om een opdracht mee te maken dat studenten zelf een gen uit kunnen kiezen om te testen voor differentiatie
 ```
 
 
 
 ```{r}
-sample1 <- rnbinom(100, size = (0.027 * 865), mu = 865)
+#Maar eerst even een test uitvoeren met gewoon 2 samples die door R zijn gegenereerd. Ik heb hier even 2 means gekozen.
+sample1 <- rnbinom(4, size = (0.027 * 865), mu = 865)
 sample2 <- rnbinom(4, size = (0.027 * 1312), mu = 1312)
 
 sample1
 sample2
 
+# Maar het lukt me dus niet om een binomial wald test uit te voeren op de 2 test samples. 
 
+# Want eigenlijk willen we hier toch het volgende testen?
+#H0: Sample 1 en sample 2 zijn gegenereerd door 1 distributie met dispersie x en mean y.
+#H1: sample 1 en sample 2 zijn niet gegenereerd door 1 distributie met dispersie x en mean y. Maar zijn differentiaal tot expressie gekomen. 
+
+# Maar dat lukt me dus niet echt. Want de functie uit de DESeq2 package nbinomWaldTest() kan ik hier dus niet voor gebruiken helaas. 
+# Kun jij me misschien verder helpen Marc? 
 ```
 
 
@@ -626,6 +595,8 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 
 ## Principal Component Analysis
 
+Hier ben ik nog mee bezig. 
+
 ```{r, eval = FALSE, include = FALSE}
 
 load(file = here::here("data", "athletes.RData"))
@@ -633,8 +604,6 @@ load(file = here::here("data", "athletes.RData"))
 head(athletes)
 
 ```
-
-
 
 
 ```{r}
@@ -667,15 +636,13 @@ fviz_pca_biplot(athletes, geom = "point",
 
 
 
-
 ## Heat map
 
 
 
 # Transcript length bias
 
-A much overlooked bias is the transcript length bias. This bias is the result of longer mRNA molecules being broken up into more fragments than shorter mRNA's. This results in overrepresentation of longer genes *within* samples. 
-It is possible to correct for this within sample variation but doing so introduces variation between samples. Since we are usually interested in the differential expression of genes between samples we choose to leave the transcript length bias as is.   
+A much overlooked bias is the transcript length bias. This bias is the result of longer mRNA molecules being broken up into more fragments compared to shorter mRNA's. This results in overrepresentation of longer genes *within* samples. It is possible to correct for this within sample variation but doing so introduces variation between samples. Since we are usually interested in the differential expression of genes between samples we choose to leave the transcript length bias as is.   
 However it is important to be aware of its presence.
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: mortazavi 2008"}
@@ -685,7 +652,10 @@ knitr::include_graphics(path =here::here("images", "mortazavi2008_transcript_len
 To get an idea of the scale of this bias in our dataset we can plot the genelength in basepairs versus the % differentially expressed.
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x) A: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. B: After performing a log fold shrink the bias becomes magnified."}
+
 #annotate airway dataset with transcript length to check for transcript length bias. 
+# Dit script moet nog even netter gemaakt worden. Niet alle namen zijn even duidelijk
+
 data(airway)
 ddsSE_airway <- DESeq2::DESeqDataSet(airway, design =  ~dex+cell)
 keep <- rowSums(counts(ddsSE_airway)) >= 10
@@ -771,21 +741,6 @@ grid.arrange(graph1, graph2, ncol=2)
 
 
 
-# Exploring Results (histogram of p-values, MA/vulcan plot, PCA plot and Heatmap) 
-
-```{r}
-#test codechunk
-barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000179094")))
-```
-
-
-```{r}
-# hoe het eigenlijkzou moeten die annotatie
-annot <- annot[match(rownames(ddsDE_airway), annot$ensembl_gene_id),]
-
-all(rownames(ddsDE_airway) == annot$ensembl_gene_id)
-
-```
 
 
 
