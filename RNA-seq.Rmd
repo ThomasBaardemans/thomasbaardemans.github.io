@@ -1,0 +1,358 @@
+---
+title: "**Capstone Advanced Bioinformatics**"
+subtitle: "*GSE147507: GSM4462336, GSM4462337, GSM4462338, GSM4462339, GSM4462340, GSM4462341*"
+author: "Thomas Baardemans 1695091"
+date: "22-6-2020"
+output:
+  html_document:
+    theme: cosmo
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    toc_depth: 3
+    toc_title: "Table of Contents"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, include = TRUE)
+```
+#Foreword
+During my minor I attended a "Advanced Bioinformatics" course. For 
+
+
+# Introduction
+
+To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020	SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 (^Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.)
+
+# Differential expression analysis
+This analysis used the DESeq2 workflow by Love et al., 2014(^ Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8)
+
+## loading libraries and setting root 
+```{r, eval = FALSE, include = TRUE}
+#install libraries if not installed
+require("tidyverse") || utils::install.packages("tidyverse")
+require("rprojroot") || utils::install.packages("rprojroot")
+require("pheatmap") || utils::install.packages("pheatmap")
+BiocManager::install("Biostrings")
+BiocManager::install("biomaRt")
+BiocManager::install("GEOquery")
+BiocManager::install("rnaseqGene")
+BiocManager::install("msa")
+BiocManager::install("iSEE")
+```
+
+```{r}
+#load libraries
+library(tidyverse)
+library(rprojroot)
+library(Biostrings)
+library(biomaRt)
+library(GEOquery)
+library(rnaseqGene)
+library(pheatmap)
+library(msa)
+library(iSEE)
+```
+
+```{r}
+#find the root file
+root <- find_root_file(criterion = is_rstudio_project)
+```
+
+
+## Data Downloading
+
+```{r}
+GSE147507 <- getGEO('GSE147507', destdir=".", GSEMatrix = TRUE)
+GSE147507_supp <- getGEOSuppFiles('GSE147507', makeDirectory = TRUE, baseDir = getwd(),
+  fetch_files = TRUE, filter_regex = NULL)
+
+#there is human and ferret data. We select the human data. 
+gse_human <- GSE147507[[1]]
+```
+
+
+## Generating a summarizedexperiment 
+```{r}
+# First we obtain all the datatypes needed.
+
+#We start with assay data (countsdata)
+raw_counts_human <- read_tsv(file.path(root, "GSE147507", "GSE147507_RawReadCounts_Human.tsv.gz"))
+
+#obtaining phenotypic data. contains all the info regarding each sample. 
+phenodata_human <- pData(gse_human) %>% as_tibble
+
+#First column of raw_counts contains te genenames (featuredata)
+rowdata_human <- raw_counts_human$X1
+
+# lastly we collect the metadata 
+metadata <- experimentData(gse_human)
+```
+
+
+```{r}
+#Next we select the samples that the assignment calls for
+coldata_human <- phenodata_human[21:26,]
+assaydata_human <- as.matrix(raw_counts_human[,22:27])
+rownames(assaydata_human) <- raw_counts_human$X1 #for some reason the summarizedexperiment funtion won't use the rowdata but if I add it to the assaydata it does work.
+
+#changing the colname to treatment to make more sense
+colnames(coldata_human)[8] <- "treatment"
+```
+
+
+```{r}
+#Now we make a summarizedexperiment 
+se_human <- SummarizedExperiment(assays = assaydata_human,
+                     rowData = rowdata_human,
+                     colData = coldata_human)
+
+metadata(se_human)$metadata <- metadata #adding metadata manually because the summarizedexperiment won't accept it.
+
+#inspecting summarized experiment
+se_human
+head(assay(se_human))
+
+# uncomment the next line of code to inspect the coldata. 
+#colData(se_human)
+
+# uncomment the next line of code to inspect the metadata
+#metadata(se_human)
+```
+
+
+## DESeq2 analysis
+```{r}
+#differential expression analysis. The only variable that is changed between samples is treatment with SARS-CoV-2 or mock treatment. 
+
+#make DESeq2 dataset
+ddsSE_human <- DESeq2::DESeqDataSet(se_human, design =  ~treatment)
+
+#filter all genes expressed less than 10 times.
+keep <- rowSums(counts(ddsSE_human)) >= 10
+ddsSE_human <- ddsSE_human[keep,]
+
+#run differential expression analysis
+ddsDE_human <- DESeq(ddsSE_human)
+```
+
+```{r}
+#getting the results of the analysis
+res_human <- results(ddsDE_human)
+
+#show top genes
+res_human[order(res_human$padj), ] %>% head
+
+#store genes in a top 5 list for later use in sequence alignnment. 
+top5genes <- rownames(res_human[order(res_human$padj), ])[1:5]
+
+```
+
+```{r}
+#log fold change
+
+#get resultnames to input into LFC function
+resultsNames(ddsDE_human)
+
+#apply Log 2 fold change
+resLFC_human <- lfcShrink(ddsDE_human, coef="treatment_SARS.CoV.2.infected.A549.cells_vs_Mock.treated.A549.cells", type="apeglm")
+```
+
+```{r}
+# show distribution of p-values
+ggplot(as(res_human, "data.frame"), aes(x = pvalue)) +
+  geom_histogram()
+```
+
+```{r}
+#make a vulcan plot
+DESeq2::plotMA(resLFC_human, ylim=c(-2,2))
+```
+
+Principal component analysis shows the biggest variance between treated and mock treated cells (as is to be expected). There is also variance between treated cells. The mock treated cells dont show much variance between themselves.  
+```{r}
+#principal component analysis
+ddsDE_rlog_human <- ddsDE_human %>%
+  rlogTransformation() 
+
+
+ddsDE_rlog_human %>%
+  DESeq2::plotPCA(intgroup = c("treatment")) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
+```
+
+## Heatmaps
+top 100 of up and down regulated genes (no annotation needed since the gene names were already in the raw counts data)
+```{r}
+matrix_results <- assay(ddsDE_rlog_human)
+
+ind <- matrix_results %>%
+  rowMeans() %>%
+  order(decreasing = TRUE) 
+
+top100 <- matrix_results[ind[1:100],]
+
+heatmap <- pheatmap(top100,
+                    scale = "row")
+heatmap
+```
+
+top 20 of up and down regulated genes
+```{r}
+matrix_results <- assay(ddsDE_rlog_human)
+
+ind <- matrix_results %>%
+  rowMeans() %>%
+  order(decreasing = TRUE) 
+
+top20 <- matrix_results[ind[1:20],]
+heatmap <- pheatmap(top20,
+                    scale = "row")
+heatmap
+```
+
+
+## Sequence allignment of top 5 differentiated genes. 
+
+first we retrieve the human ensemble id's and description etc.
+```{r}
+mart <- useMart(biomart = "ensembl")
+
+h_sapiens <- useDataset(dataset = "hsapiens_gene_ensembl", 
+                        mart=mart)
+
+filters = listFilters(h_sapiens) %>% 
+  as_tibble() 
+
+attributes <- listAttributes(h_sapiens) %>%
+  as_tibble() 
+
+human_annot <- getBM(attributes = c('external_gene_name',
+                     'ensembl_gene_id',
+                     'chromosome_name',
+                     'description'), 
+      filters = 'external_gene_name',
+      values = top5genes,
+      mart = h_sapiens) %>%
+  dplyr::mutate(species = "H.sapiens") %>%
+  dplyr::select(species, external_gene_name:description) %>%
+  as_tibble()
+
+human_annot
+```
+
+next we do the same to get the homologs for oran utan
+```{r}
+oran_utan <- useMart(biomart = "ensembl", 
+                       dataset="pabelii_gene_ensembl")
+
+homologs_oran <- getBM(attributes = c('external_gene_name',
+                     'ensembl_gene_id',
+                     'chromosome_name',
+                     'description'), 
+      filters = 'external_gene_name',
+      values = top5genes,
+      mart = oran_utan) %>% 
+  mutate(species = "P. abelii")
+```
+
+Next we bind them together
+```{r}
+all_data <- dplyr::bind_rows(human_annot, homologs_oran)
+```
+
+
+get human sequence
+```{r}
+human_gene_id <- all_data %>%
+  dplyr::filter(species == "H.sapiens") %>%
+  dplyr::select(ensembl_gene_id) 
+
+human_sequence <- biomaRt::getSequence(id = human_gene_id$ensembl_gene_id, 
+            type="ensembl_gene_id",
+            seqType="coding",
+            mart= h_sapiens) %>%
+  as_tibble() %>%
+  dplyr::filter(coding != "Sequence unavailable") %>%
+  print()
+
+human_sequence <- unique(human_sequence) 
+```
+
+
+get oran utan sequence
+```{r}
+oran_gene_id <- all_data %>%
+  dplyr::filter(species == "P. abelii") %>%
+  dplyr::select(ensembl_gene_id)
+  
+
+oran_sequence <- biomaRt::getSequence(id = oran_gene_id$ensembl_gene_id, 
+            type="ensembl_gene_id",
+            seqType="coding",
+            mart= oran_utan) %>%
+  as_tibble() %>%
+  dplyr::filter(coding != "Sequence unavailable")
+
+oran_sequence <- unique(oran_sequence) 
+```
+
+##binding sequence and gene info together
+```{r}
+all_sequences <- dplyr::bind_rows(human_sequence,
+                                  oran_sequence)
+
+all_data_sequence <- dplyr::left_join(all_sequences, all_data, by = "ensembl_gene_id")
+
+all_data_sequence <- all_data_sequence %>%
+  as_tibble() %>%
+  arrange(external_gene_name)
+```
+
+
+```{r}
+#C15orf48 allignment
+C15orf48  <- filter(all_data_sequence, external_gene_name == "C15orf48")
+FASN  <- filter(all_data_sequence, external_gene_name == "FASN")
+GPX2  <- filter(all_data_sequence, external_gene_name == "GPX2")
+LAMC2 <- filter(all_data_sequence, external_gene_name == "LAMC2")
+STC2 <- filter(all_data_sequence, external_gene_name == "STC2")
+
+C15orf48_aa <- Biostrings::AAStringSet(C15orf48$coding)
+FASN_aa <- Biostrings::AAStringSet(FASN$coding)
+GPX2_aa <- Biostrings::AAStringSet(GPX2$coding)
+LAMC2_aa <- Biostrings::AAStringSet(LAMC2$coding)
+STC2_aa <- Biostrings::AAStringSet(STC2$coding)
+
+
+names(C15orf48_aa) <- paste(C15orf48$species, C15orf48$ensembl_gene_id, sep = "_")
+names(FASN_aa) <- paste(FASN$species, FASN$ensembl_gene_id, sep = "_")
+names(GPX2_aa) <- paste(GPX2$species, GPX2$ensembl_gene_id, sep = "_")
+names(LAMC2_aa) <- paste(LAMC2$species, LAMC2$ensembl_gene_id, sep = "_")
+names(STC2_aa) <- paste(STC2$species, STC2$ensembl_gene_id, sep = "_")
+```
+
+```{r}
+library(msa)
+C15orf48_align <- msa::msa(C15orf48_aa)
+C15orf48_align 
+
+FASN_align <- msa::msa(FASN_aa)
+FASN_align 
+
+GPX2_align <- msa::msa(GPX2_aa)
+GPX2_align 
+
+LAMC2_align <- msa::msa(LAMC2_aa)
+LAMC2_align 
+
+STC2_align <- msa::msa(STC2_aa)
+STC2_align 
+```
+
+# Conclusion
+Alot of genes in the A549 cells get up or down regulated when infected with the virus. Next steps would be to analyze the other data available in this set. For example the human biopts and the ferret data would be usefull to compare this data to. 
