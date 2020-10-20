@@ -37,8 +37,6 @@ BiocManager::install(version = "3.11")
 ```{r}
 #install.packages("vcd")
 #install.packages("ade4")
-
-
 ```
 
 
