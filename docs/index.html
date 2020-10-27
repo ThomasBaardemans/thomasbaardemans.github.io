@@ -21,6 +21,8 @@
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
@@ -31,7 +33,7 @@
   div.column{display: inline-block; vertical-align: top; width: 50%;}
   div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
   ul.task-list{list-style: none;}
-      </style>
+    </style>
 
 
 
@@ -297,7 +299,7 @@ $(document).ready(function () {
 <p><img src="images/portrait_hex.png" width="25%" style="float:right; padding:10px" /></p>
 <div id="welcome-to-my-data-science-portfolio-website." class="section level2">
 <h2>Welcome to my data science portfolio website.</h2>
-<p>On this website I post articles and code/projects I am currently working on. Currently I am set to graduate before November 2020 as a biotechnician from the Hogeschool Utrecht. The highlights of my education so far include:</p>
+<p>On this website I post articles and code/projects I am currently working on. Currently I am set to graduate in November 2020 as a biotechnician from the Hogeschool Utrecht. The highlights of my education so far include:</p>
 <ul>
 <li><em>In Vivo:</em> In my 3rd year I specialized in zoology and performed a multitude of laboratory animal procedures. Part of this specialization was a year-long internship at the Netherlands Institute for Neuroscience.<br />
 </li>
@@ -322,7 +324,7 @@ data-acquisition tools/scripts.</li>
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();
