@@ -21,26 +21,24 @@ knitr::opts_chunk$set(echo = TRUE, include = TRUE, warning = FALSE, message = FA
 ```
 
 ```{r}
+#Installing packages and loading libraries.
+
+# If bioconductor is not installed it can be installed by running the next line of code:
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install(version = "3.11")
-```
 
-
-```{r}
+#Uncomment the following lines of code and run them to install the packages if they are not already installed.
 #BiocManager::install("airway")
 #BiocManager::install("DESeq2")
 #BiocManager::install("biomaRt")
 #BiocManager::install("apeglm")
-```
-
-```{r}
+#BiocManager::install("airway")
 #install.packages("vcd")
 #install.packages("ade4")
-```
 
 
-```{r}
+#Load the packages
 library(tidyverse)
 library(DESeq2)
 library(dplyr)
@@ -52,38 +50,35 @@ library(gridExtra)
 library(vcd)
 library(ade4)
 library(factoextra)
+library(airway)
 ```
+
 
 # **Introduction**
   
-RNA sequencing is currently the most widely used technique for quantifying gene expression (transcriptome) in tissues, cell cultures or even individual cells. Interpretation of the resulting data is not as straightforward as it might seem due to biases introduced by the methods used and biological variety between samples. In order to correctly analyse a transcriptome dataset it is important to understand methods used to obtain and analyze the data. This lesson aims to give the student a broad overview of a typical RNA-seq experiment. Furthermore it will also give an insight into the statistical tests used by the DESeq2 package to test for differentially expressed genes. Throughout the lesson special attention is given to biases that may be introduced. The lesson is split up in three chapters. The first chapter describes the setup of the experiment and what biases it may introduce and will also discuss the mapping of the reads to the genome. The second chapter discusses the inner workings of DESeq2 function and third chapter will focus on (visualizing) the results. 
+RNA sequencing is currently the most widely used technique for quantifying gene expression (transcriptome) in tissues, cell cultures or even individual cells. Interpretation of the resulting data is not as straightforward as it might seem due to biases introduced by the methods used and biological variety between samples. In order to correctly analyse a transcriptome dataset it is important to understand methods used to obtain and analyze the data. This lesson aims to give the student a broad overview of a typical RNA-seq experiment. Furthermore it will also give an insight into the statistical tests used by the DESeq2 package to test for differentially expressed genes. We will use the "airway" dataset that can be installed using bioconductor so the student can follow along using the code provided in the codeblocks. 
 
 
-# **Next Generations Sequencing and mapping reads**
-
-Before we can begin to understand any of the statistical tests used by DESeq2 we need to have a rough understanding of the experiment that produced the data and steps involved. 
-
-The technique uses reverse transcriptase to convert mRNA molecules to cDNA molecules. The resulting sequences(reads) of cDNA are mapped onto the genome. This produces a 'counts table' with the exact amount of mRNA molecules that were detected in the sample. This step of mapping the reads onto the genome is usually done already when 
-a dataset is submitted to the GEO website. This process can be repeated byb downloading the .SRA files using the "SRA Run Selector" found on the GEO page.  
-This step is not part of this course and we will start with the raw counts of each gene.
+# **Next Generation Sequencing and mapping reads**
+Before we can begin to understand any of the statistical tests used by DESeq2 we need to have a rough understanding of the experiment that produced the data and steps involved. RNA-seq experiments use Next Generation sequencers to quantify RNA molecules in cells or tissues. Each step in the experiment influences the data obtained in a different way so we will discuss the main steps seperately. 
 
 ## Experimental design
 Cell/Bacteria cultures can be harvested or biopts can be taken from animals or patients. The minimal design has at least 1 experimental variable and 3 replications (samples) per group. Careful consideration of replication number is advised though since a study using 42 replications per group has shown that using just 3 replications only identifies 20-40% of differentially expressed genes depending on the tool used (Schurch, Nicholas J et al. 2016). To identify >85% of genes regardless of fold change 20 replications are required (fold change is a quantative measure of difference. See chapter ...). They conclude at least 6-12 replications are recommended. Because scientists often want to maximize the amount of experimental conditions most of the datasets contain 3 replications.  
 
 ## Library preparation.
-After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library. The fragmentation is neccesary because most Next Generation Sequencing machines can only sequence molecules up to 300 basepairs.    
+After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library. The fragmentation is necessary because most Next Generation Sequencing machines can only sequence molecules up to 300 basepairs.    
 
 ```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: cDNA library synthesis. adapted from: Overview of RNA seq tech from illumina website"}
 knitr::include_graphics(path = here::here("images", "cDNA_library.png"))
 ```
 
-## Next Generation Sequencing (NGS)  
-After cDNA synthesis the fragments are ligated to adapters to attach the molecules to the nanowells in a flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide attached and the flowcell is imaged.
+## Next Generation Sequencing (NGS) and read depth.  
+After cDNA synthesis the fragments are ligated to adapters to attach the molecules to the nanowells in a flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide is attached and the flowcell is imaged in order to call the base.
 
-*Concept 1: Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
-When using RNA-seq the read depth takes on a different meaning: It is the ammount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts.* 
+Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
+When using RNA-seq the read depth takes on a different meaning: It is the amount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts. 
 
-Further reading: For a more in-depth understanding of the NGS method you can watch this video: https://www.ibiology.org/techniques/next-generation-sequencing/#part-1 (short read NGS starts at 06:46 and ends at 20:52).
+*Further reading: The complete method of NGS is beyond the scope of this lesson. For a more in-depth understanding of the NGS method you can watch this video: https://www.ibiology.org/techniques/next-generation-sequencing/#part-1 (short read NGS starts at 06:46 and ends at 20:52).*
 
 ## Mapping reads 
 Now that the sequences of the reads are known they need to be mapped to a reference genome and counted (each cDNA fragment that is sequenced is usually reffered to as a "read" or a "count"). Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
@@ -94,19 +89,9 @@ knitr::include_graphics(path = here::here("images", "stark2019_adapted.png"))
 
 Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know whether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software(ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (mortazavi 2008, laatste zin is bijna helemaal ge-copy-pasted van bron --> misschien nog even omschrijven). 
 
-Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw
+*Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw*
 
 After assigning each read to a gene all the readcounts are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will lean how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
-
-
-```{r, eval = FALSE, include = TRUE, collapse = FALSE}
-# Uncomment and run the next line to install using bioconductor:
-
-BiocManager::install("airway")
-
-#load the package into R
-library(airway)
-```
 
 
 ```{r, include = TRUE, collapse = FALSE}
@@ -147,14 +132,14 @@ In this chapter we will go through each step in but before we get there we will 
 
 ## Binomial distribution
 
-The simplest example of a binomial distribution is the coin toss. binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. Each "cointoss" is called a Bernoulli trial. 
+A binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. The simplest example of a binomial distribution is the coin toss. Each "cointoss" is called a Bernoulli trial. 
 
 ```{r, echo = TRUE}
 #randomly generate 10 cointosses
 rbinom(n = 10, size = 1, prob = 0.5)
 ```
 
-exercise: Use rbinom to simulate 100 double rolls of a die. Where throwing 6 is considered "succes" and everything below a "fail". The results should show a "1" when a single 6 has been rolled and "2" when both die rolled a 6. 
+exercise: Use rbinom to simulate 100 **double** die rolls. Where throwing 6 is considered "succes" and everything below a "fail". The results should show a "1" when a single 6 has been rolled and "2" when both die rolled a 6. 
 
 ```{r, echo = TRUE}
 #Answer:
@@ -169,13 +154,14 @@ dbinom(2, 2, prob = 1/6)
 
 #to get the probabilities for all possible outcomes we use the colon. the chance of 3 succes if ofcourse zero because we only throw with 2 dice.
 dbinom(0:3, 2, prob = 1/6)
+```
 
 
+```{r, echo is false, include=TRUE, fig.cap="Barplot of probabilities throwing 0,1 or 2 sixes."}
 barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3)
 ```
 
 ## Poisson distribution 
-
 *When the probability of success p is small and the number of trials n large, the binomial distribution B(n,p) can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np.*
 **(Stuk tussen haakjes is copy pasta uit mod stat mod bio. Nog even omschrijven. Maar is wel mooi omschreven.)** 
 
@@ -326,40 +312,77 @@ This result is in line with what we know about the V1 today: It could only be ai
 
 ## Maximum likelihood estimation
 
-So far we have used a top-down approach. We had a big dataset with a known lambda and we compared it to the distribution with the same lambda. 
-Sometimes there are not enough datapoints to simply take the mean and use this as a lambda. 
+So far we have used a top-down approach. We had a big dataset with a known lambda and we compared it to the distribution with the same lambda. Usually the lambda that generated the data is not known and has to be estimated. Estimating a parameter like this can be done using a method called maximum likelihood estimation (MLE). MLE calculated the lambda which makes the observed data most probable to observe. To understand how this method works we can generate a poisson dataset with a known lambda
 
-**Exercise x: Use rpois to generate 3 numbers with a lambda of your choosing?. Calculate the mean of the 3 numbers. Does it approach the chosen lambda used to generate the dataset? Try again but now generate 1000 numbers** 
-
-```{r}
-#You can run this code multiple times. This way the seed will progress.
-mean(rpois(3, 100))
-
-mean(rpois(1000, 100))
+```{r, include = FALSE, echo = FALSE}
+set.seed(2)
 ```
 
-When working with RNA-seq datasets we often only have 3 replicates. So when trying to estimate the lambda of a gene from 3 datapoints taking the mean will not be very accurate. 
-**@Marc: Hier gaat het even de fout in. Ik wil dus de likelihood estimation gaan uitleggen zoals hij omschreven staat in hoofdstuk 2.3 van modern statistics for modern biology. Daar staat een hele uitleg met formules en dingen om de most likely lambda in te schatten. Ik dacht dus eigenlijk dat dat dan accurater zou moeten zijn dan gewoon het gemiddelde te pakken wanneer je maar een paar datapunten hebt. Maar nu kom ik erachter dat de max likelihood iedere keer op exact hetzelfde getal uitkomt als het gemiddelde van de observaties.... zie onderstaande code...**
 
 ```{r}
+#Create 40 poisson distributed data points. We set the lambda to be 100 however we are going to pretend we dont know the lambda is 100 and try to estimate lambda from the data.
+reads <- rpois(n = 3, lambda = 100)
+mean(reads)
+#df_mle <- data.frame(reads = reads)
 
-# To get a sample dataset I used rpois(3, 100) to generate 3 numbers. You can generate another sample set and follow along with that if you like
-#$observations <- c(103, 83, 91)
-
-observations <- rpois(3, 100) 
-
-mean(observations)
-
-gf  =  goodfit(observations, "poisson", method = "ML")
-gf$par
-
-# mmm maximum likelihood komt op hetzelfde uit als de mean. Of misschien doe ik iets fout. 
+ggplot(data = data.frame(reads = reads), aes(x = reads)) + 
+  geom_histogram(bins = 40)
 ```
 
+
+```{r}
+#calculate single datapoint for a single lambda
+dpois(reads[1], lambda = 95)
+```
+
+
+After taking a look at the plot we decide the lambda must lie somewhere between 70 and 130.
+So we want to know what lambda between 70 and 130 is most likely for the first data point. 
+
+```{r}
+dpois(reads[1], lambda = seq(from = 70, to = 130))
+
+likelihood <- dpois(reads[1], lambda = seq(from = 70, to = 130))
+likelihood <- data.frame(likelihood = likelihood)
+
+ggplot(data = likelihood, aes(x = seq(from = 70, to = 130), y = likelihood)) +
+  geom_point()
+```
+
+As you can see there are a lot of small numbers. Because these numbers sometimes need to be multiplied later on in the estimation process we use a log transform. This transform is done because multiplying very small numbers soon become smaller than the CPU of the computer can represent in its memory (arithmatic underflow). To do this we can simply add "log = TRUE" to the dpois function. 
+
+```{r}
+log_likelihood <- dpois(reads[1], lambda = seq(from = 70, to = 130), log = TRUE)
+log_likelihood <- data.frame(log_likelihood = log_likelihood)
+
+ggplot(data = log_likelihood, aes(x = seq(from = 70, to = 130), y = log_likelihood)) +
+  geom_point()
+```
+
+```{r}
+MLE_function <- function(lambda, datapoint){
+  probabilities <- sum(dpois(datapoint, lambda, log = TRUE))
+  return(probabilities)
+}
+
+MLE_function(seq(from = 70, to = 130), reads[1])
+```
+
+```{r}
+all_data_log_likelihood <- (sapply(seq(from = 70, to = 130),function(x){MLE_function(x,reads)}))
+all_data_log_likelihood <- data.frame(all_data_log_likelihood = all_data_log_likelihood, lambda = seq(from = 70, to = 130))
+
+```
+
+```{r}
+ggplot(data = all_data_log_likelihood, aes(x = lambda, y = all_data_log_likelihood)) +
+  geom_point() +
+  geom_vline(xintercept = all_data_log_likelihood$lambda[which.max(all_data_log_likelihood$all_data_log_likelihood)], color="red",size=2)
+```
 
 ## Estimation of size factor: "Normalizing" the data 
 
-When comparing the readcounts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other biases. 
+When comparing the read counts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other variables. 
 Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
 
 ```{r, echo = TRUE}
@@ -381,7 +404,7 @@ sum(assay(airway[,airway$dex == "untrt"]))
 ```
 
 The difference is not huge. But its still 3.6 million reads less in the treated group. Could it be that the treated group has some genes downregulated? Or is something else going on?
-The difference becomes more apparent if we take a look at the individual samples (fig x). The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker growth or the samples might nog have an equal sequencing depth. 
+The difference becomes more apparent if we take a look at the individual samples (fig x). The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker cellgrowth or the samples might nog have an equal sequencing depth. 
 
 ```{r}
 #create a dataframe with the total reads of all samples and their treatment. 
@@ -603,18 +626,10 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 
 ## Principal Component Analysis
 
-Hier ben ik nog mee bezig. 
-
-```{r, eval = FALSE, include = FALSE}
-
-load(file = here::here("data", "athletes.RData"))
-
-head(athletes)
-
-```
+Data can contain a lot of variables. Some might even be unknown to us. To get an idea of the variance in our data and what variables (principal components) are mainly responsible for this variance we can do a Principal Component Analysis (PCA). A principal component analysis tries to compress a big amount of data into a single point on a plot to show relations or clusters and what principal components cause these clusters.   
 
 
-```{r}
+```{r, fig.cap="Figure x: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular."}
 #principal component analysis
 ddsDE_rlog_airway <- ddsDE_airway %>%
   rlogTransformation() 
@@ -626,27 +641,24 @@ ddsDE_rlog_airway %>%
   geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
 ```
 
+PCA compresses the data by reducing the dimensions in the data. 
 
-```{r, eval = FALSE, include = FALSE}
-scaled_athletes <- scale(athletes) %>% round(1)
-head(scaled_athletes)
-
-pca.ath = dudi.pca(athletes, scannf = FALSE)
-pca.ath$eig
-
-fviz_eig(pca.ath, geom = "bar", bar_width = 0.3) + ggtitle("")
-
-fviz_pca_biplot(athletes, geom = "point",
-   col.var = "violet", addEllipses = TRUE, ellipse.level = 0.69) +
-   ggtitle("") + coord_fixed()
-
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: Reads for 2 correlating samples. A principal component line is fitted through it and the datapoints are projected onto the line"}
+knitr::include_graphics(path =here::here("images", "PCA1.png"))
 ```
 
 
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: The line is rotated so the red dots represent the 2 dimensional data (x and y) in 1 dimension (x)"}
+knitr::include_graphics(path =here::here("images", "PCA2.png"))
+```
 
-## Heat map
+The one dimensional data can be described with an "eigenvalue". This value represents the variance introduced by a variable. The eigenvalues of a dataset can be plotted in a scree plot.
 
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: A scree plot showing the eigenvalues of each dimension. Dimension 1 and 2 (PC1 and PC2) are responsible for most variance in the data so a 2 dimensional PCA plot can accurately portray the data."}
+knitr::include_graphics(path =here::here("images", "scree.png"))
+```
 
+If the eigenvalue of PC3 is about equal to the eigenvalue of PC2 it is not possible to accurately plot the data in 2 dimensions and a 3d PCA plot should be used.
 
 # Transcript length bias
 
