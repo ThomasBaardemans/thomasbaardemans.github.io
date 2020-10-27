@@ -2,7 +2,7 @@ name: "Thomas Baardemans"
 navbar:
   title: Thomas Baardemans
   right:
-    - text: "RNA-seq: background & bias"
+    - text: "RNA-seq: Method"
       href: Advanced_Bioinformatics_DESeq2.html
     - text: "Python"
       href: python.html

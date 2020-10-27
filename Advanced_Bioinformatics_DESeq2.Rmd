@@ -1,12 +1,12 @@
 ---
-title: "**DESeq2 analysis: Method and Background**"   
+title: "**RNA-seq: Overview of DESeq2 method**"   
 author: "*Author:* Thomas Baardemans,   *Supervisor:* Marc Teunis (Hogeschool Utrecht)"
 date: "`r format(Sys.time(), '%d-%b-%Y')`"
 output:
   html_document:
     toc: true
     toc_float:
-      collapsed: true
+      collapsed: false
       smooth_scroll: true
     number_sections: true
     toc_depth: 3
@@ -56,38 +56,39 @@ library(airway)
 
 # **Introduction**
   
-RNA sequencing is currently the most widely used technique for quantifying gene expression (transcriptome) in tissues, cell cultures or even individual cells. Interpretation of the resulting data is not as straightforward as it might seem due to biases introduced by the methods used and biological variety between samples. In order to correctly analyse a transcriptome dataset it is important to understand methods used to obtain and analyze the data. This lesson aims to give the student a broad overview of a typical RNA-seq experiment. Furthermore it will also give an insight into the statistical tests used by the DESeq2 package to test for differentially expressed genes. We will use the "airway" dataset that can be installed using bioconductor so the student can follow along using the code provided in the codeblocks. 
+RNA sequencing is currently the most widely used technique for quantifying gene expression (transcriptome) in tissues, cell cultures or even individual cells. Interpretation of the resulting data is not as straightforward as it might seem due to biases introduced by the methods used and biological variety between samples. In order to correctly analyse a transcriptome dataset it is important to understand methods used to obtain and analyze the data. This lesson aims to give the student a broad overview of a typical RNA-seq experiment. Furthermore it will also give an insight into the statistical tests used by the DESeq2 package (Love, Huber, Anders. 2014^[Love, M.I., Huber, W., Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2 Genome
+  Biology 15(12):550 (2014)]) to test for differentially expressed genes. We will use the "airway" dataset that can be installed using bioconductor so the student can follow along using the code provided in the codeblocks. 
 
 
 # **Next Generation Sequencing and mapping reads**
 Before we can begin to understand any of the statistical tests used by DESeq2 we need to have a rough understanding of the experiment that produced the data and steps involved. RNA-seq experiments use Next Generation sequencers to quantify RNA molecules in cells or tissues. Each step in the experiment influences the data obtained in a different way so we will discuss the main steps seperately. 
 
 ## Experimental design
-Cell/Bacteria cultures can be harvested or biopts can be taken from animals or patients. The minimal design has at least 1 experimental variable and 3 replications (samples) per group. Careful consideration of replication number is advised though since a study using 42 replications per group has shown that using just 3 replications only identifies 20-40% of differentially expressed genes depending on the tool used (Schurch, Nicholas J et al. 2016). To identify >85% of genes regardless of fold change 20 replications are required (fold change is a quantative measure of difference. See chapter ...). They conclude at least 6-12 replications are recommended. Because scientists often want to maximize the amount of experimental conditions most of the datasets contain 3 replications.  
+Cell/Bacteria cultures can be harvested or biopts can be taken from animals or patients. The minimal design has at least 1 experimental variable and 3 replications (samples) per group. Careful consideration of replication number is advised though since a study using 42 replications per group has shown that using just 3 replications only identifies 20-40% of differentially expressed genes depending on the tool used (Schurch, Nicholas J et al. 2016^[Schurch, N. J., Schofield, P., Gierliński, M., Cole, C., Sherstnev, A., Singh, V., Wrobel, N., Gharbi, K., Simpson, G. G., Owen-Hughes, T., Blaxter, M., & Barton, G. J. (2016). How many biological replicates are needed in an RNA-seq experiment and which differential expression tool should you use?. RNA (New York, N.Y.), 22(6), 839–851. https://doi.org/10.1261/rna.053959.115]). To identify >85% of genes regardless of fold change 20 replications are required (fold change is a quantative measure of difference). They conclude at least 6-12 replications are recommended. Because scientists often want to maximize the amount of experimental conditions most of the datasets contain 3 replications.  
 
-## Library preparation.
-After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library. The fragmentation is necessary because most Next Generation Sequencing machines can only sequence molecules up to 300 basepairs.    
+## Library preparation
+After the RNA is extracted from the sample the ribosomal RNA (rRNA) needs to be removed. Over 90% of the RNA found in a cell is rRNA and only 1-2 % of the RNA is the mRNA we are interested in in a standard RNA-seq experiment (Conesa et al. 2016^[Conesa, A., Madrigal, P., Tarazona, S. et al. A survey of best practices for RNA-seq data analysis. Genome Biol 17, 13 (2016). https://doi.org/10.1186/s13059-016-0881-8]). mRNA selection can be achieved by selecting for the poly(A) tail found on eukaryotic mRNA's or by depleting rRNA. poly(A) selection yields better results but is not always possible in biopts and is never possible in bacteria because they do not have poly(A) tails in their mRNA's. poly(A) selection also filters out other non coding DNA such as microRNAs (miRNAs) because they do not contain a poly A tail either. After selection the mRNA's are fragmented and reverse transcripted to synthesize the cDNA library. The fragmentation is necessary because most Next Generation Sequencing machines can only sequence molecules up to 300 basepairs.    
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: cDNA library synthesis. adapted from: Overview of RNA seq tech from illumina website"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 1: Steps involved in cDNA library synthesis for a standard RNA-seq experiment."}
 knitr::include_graphics(path = here::here("images", "cDNA_library.png"))
 ```
 
-## Next Generation Sequencing (NGS) and read depth.  
+## Next Generation Sequencing (NGS) and read depth  
 After cDNA synthesis the fragments are ligated to adapters to attach the molecules to the nanowells in a flowcell. NGS uses 1 strand of the cDNA to synthesize the complementing strand using fluorescently labelled nucleotides. After each cycle a new nucleotide is attached and the flowcell is imaged in order to call the base.
 
-Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina (https://emea.illumina.com/science/technology/next-generation-sequencing/plan-experiments/coverage.html).
-When using RNA-seq the read depth takes on a different meaning: It is the amount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al 2011). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts. 
+Read depth (also know as sequencing depth) is a parameter with a different meaning depending on the experiment conducted. If a whole genome is sequenced the read depth is the number of times each nucleotide has been sequenced to call the base. In a typical whole genome experiment an average read depth of 30 to 50x is recommended by illumina.
+When using RNA-seq the read depth takes on a different meaning: It is the amount of reads that is "sampled" from the whole population of cDNA molecules in the library (tarazona et al. 2011^[Tarazona, S., García-Alcalde, F., Dopazo, J., Ferrer, A., & Conesa, A. (2011). Differential expression in RNA-seq: a matter of depth. Genome research, 21(12), 2213–2223. https://doi.org/10.1101/gr.124321.111]). This usually runs in the millions depending on the goal of the experiment and can be > 100 million reads per sample. More read depth results in a more accurate quantification of genes that are expressed in low amounts. 
 
 *Further reading: The complete method of NGS is beyond the scope of this lesson. For a more in-depth understanding of the NGS method you can watch this video: https://www.ibiology.org/techniques/next-generation-sequencing/#part-1 (short read NGS starts at 06:46 and ends at 20:52).*
 
 ## Mapping reads 
-Now that the sequences of the reads are known they need to be mapped to a reference genome and counted (each cDNA fragment that is sequenced is usually reffered to as a "read" or a "count"). Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (stark_2019). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
+Now that the sequences of the reads are known they need to be mapped to a reference genome and counted (each cDNA fragment that is sequenced is usually reffered to as a "read" or a "count"). Usually the raw sequences of the reads are submitted to the Short Read Archive (SRA) so other researchers can reproduce this step and every step hereafter. Mapping the reads to the genome proves to be harder than might be expected at first. One of the challenges is presented by the different isoforms of genes produced by alternative splicing. Over 90% of human genes are alternatively spliced producing a big amount of possible isoforms (Stark, Grzelak, Hadfield. 2019^[Stark, R., Grzelak, M., & Hadfield, J. (2019). RNA sequencing: the teenage years. Nature reviews. Genetics, 20(11), 631–656. https://doi.org/10.1038/s41576-019-0150-2]). This leads to reads being mapped ambiguously (fitting on more than one isoform) making it hard to count which read belongs to which isoform.   
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Ambiguous reads present a problem in assigning a read to specific isoform. Even splice junction spanning reads can be ambiguous. Using the unambiguous reads an estimate can be made about isoform prevalence. Adapted from stark 2019"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 2: Ambiguous reads present a problem in assigning a read to specific isoform. Even splice junction spanning reads can be ambiguous. Using the unambiguous reads an estimate can be made about isoform prevalence. Adapted from Stark, Grzelak, Hadfield. 2019"}
 knitr::include_graphics(path = here::here("images", "stark2019_adapted.png"))
 ```
 
-Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know whether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software(ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (mortazavi 2008, laatste zin is bijna helemaal ge-copy-pasted van bron --> misschien nog even omschrijven). 
+Paralogues reads prove to be an even harder problem to solve. Paralogues genes are genes that share a (relatively recent) common ancestor gene. This can lead to large portions of the sequence being completely identical. If a read falls within this zone it is impossible to know whether it belongs to gene x or y. Simply discarding these "multireads" can result in an underrepresentation of counts from genes that have lots of paralogues like the ubiquitin family for example. Some software (ERANGE) distributes these multireads in proportion to the number of unique and splice reads at similar loci (Mortazavi 2008^[Mortazavi, A., Williams, B., McCue, K. et al. Mapping and quantifying mammalian transcriptomes by RNA-Seq. Nat Methods 5, 621–628 (2008). https://doi.org/10.1038/nmeth.1226])
 
 *Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw*
 
@@ -103,14 +104,14 @@ data(airway)
 
 The airway dataset has already been cleaned up and formed into a SummarizedExperiment ready for a differential expression analysis. Before we start analyzing it is important to first explore the dataset to see what we are actually working with. 
 
-Exercise 1: Inspect the airway dataset using the metadata(), assay() and colData() functions from the SummarizedExperiment package. Use these functions to answer the following questions:
+**Exercise 1: Inspect the airway dataset using the metadata(), assay() and colData() functions from the SummarizedExperiment package. Use these functions to answer the following questions:**
 
-- What kind of cells have been used in the experiment? 
-- How does the assaydata relate to the coldata?
-- What are the experimental conditions? 
+- **What kind of cells have been used in the experiment?** 
+- **How does the assaydata relate to the coldata?**
+- **What are the experimental conditions?**
 
-open the codeblock to see the answers. 
-```{r}
+open the codeblock to reveal the answers. 
+```{r, collapse = TRUE}
 # Answer 1: airway smooth muscle cells (use metadata() function to see title and link to pubmed).
 
 # Answer 2: The columnnames of the assaydata are linked to rownames of the colData. So each row in the colData contains information about a sample (column in assaydata). 
@@ -127,7 +128,7 @@ Now we have our dataset loaded we can start to look for differences in expressio
 - Estimation of dispersion
 - Testing 
 
-In this chapter we will go through each step in but before we get there we will dive into the binomial and poisson distributions distributions first. 
+In this chapter we will go through each step in but before we get there we will dive into the binomial and Poisson distributions distributions first. 
 
 
 ## Binomial distribution
@@ -147,7 +148,7 @@ rbinom(100, 2, prob = 1/6)
 ```
 
 To get complete distribution of probabilities we use dbinom. 
-note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability (d stands for distribution?). This also works with other statistical distributions as we will see later on in the lesson. 
+note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability. This also works with other statistical distributions as we will see later on in the lesson. 
 ```{r}
 #probability that 6 is thrown twice.
 dbinom(2, 2, prob = 1/6)
@@ -157,21 +158,23 @@ dbinom(0:3, 2, prob = 1/6)
 ```
 
 
-```{r, echo is false, include=TRUE, fig.cap="Barplot of probabilities throwing 0,1 or 2 sixes."}
+```{r, echo is false, include=TRUE, fig.cap="Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes."}
 barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3)
 ```
 
 ## Poisson distribution 
-*When the probability of success p is small and the number of trials n large, the binomial distribution B(n,p) can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np.*
-**(Stuk tussen haakjes is copy pasta uit mod stat mod bio. Nog even omschrijven. Maar is wel mooi omschreven.)** 
 
-```{r, fig.cap="figure1: A barplot showing a poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda"}
-barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#2780e3", xlab = "k", ylab = "P(X=k")
+When the probability of success p is small and the number of trials n large, the binomial distribution can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np. (Recited from: Modern Statistics for Modern Biology^[Holmes, S., & Huber, W. (2019). Modern Statistics for Modern Biology (1st ed.) [E-book]. Cambridge University Press. https://www.huber.embl.de/msmb/])
+
+```{r, fig.cap="figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda"}
+barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#2780e3", xlab = "k", ylab = "P(X=k)")
 ```
 
-If we look at figure 1 there is an event with a $\lambda$ of 6. $\lambda$ might represent the number of letters someone has received on average each day for the last month. If we were to look at the mail that arrived on a given day there is a chance of 0.04 (P) of us counting 2 (k) pieces of mail. 
+If we look at figure 4 there is an event with a $\lambda$ of 6. $\lambda$ might represent the number of letters someone has received on average each day for the last month. If we were to look at the mail that arrived on a given day there is a chance of 0.04 (P) of us counting 2 ($\kappa$) pieces of mail. 
 
-A good example of a Poisson distribution is the mutation rate of DNA. If we want to know the amount of mutations we can we are likely to find in 1 kb of DNA we start with determining the $\lambda$ (event rate / poisson mean). In this hypothetical example we examine 1 mb and find 307 mutations. So $\lambda$ = 312/1000 = 0.307. To calculate the chance we find 3 mutation in 1 kb of DNA we can use the following poisson formula 
+## Example: DNA mutation rate
+
+A good example of a Poisson distribution is the mutation rate of DNA. If we want to know the amount of mutations we can we are likely to find in 1 kb of DNA we start with determining the $\lambda$ (event rate / Poisson mean). In this hypothetical example we examine 1 mb and find 307 mutations. So $\lambda$ = 312/1000 = 0.307. To calculate the probability we find 3 mutation in 1 kb of DNA we can use the following Poisson formula. Note that P(X=k) is the probability of observing $\kappa$.
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
   <mi>P</mi>
@@ -217,7 +220,7 @@ dpois(x = 3, lambda = 0.307)
 ```
 
 so there is a probability 0.0035 that a given kb contains 3 mutations. So we expect to find about 4 sections of DNA to contain 3 mutations. 
-To get P(X=k) for all the other k values we can change the code slightly:
+To get P(X=k) for all the other$\kappa$ values we can change the code slightly:
 
 ```{r}
 mutationprobability <- dpois(x = 0:4, lambda = 0.307)
@@ -225,17 +228,16 @@ mutationprobability
 
 # To get the probability that there are 5 or more mutations in a kb we can simply subtract the sum of probabilities 0:4 from the number 1. We will need this later to perform a chi-squared test.
 mutationprobability <- c(mutationprobability, 1-sum(mutationprobability))
-
 ```
 
 and  we can also plot these values to get a visual of the distribution
-```{r}
+```{r, echo = FALSE, include = TRUE, fig.cap = "Figure 5: Distribution of mutations/kb for lambda = 0.307"}
 barplot(dpois(x = 0:4, lambda = 0.307), names.arg = 0:4, col = "#2780e3", xlab = "k", ylab = "P(X=k)")
 ```
 
-Now after fragmenting the DNA in kb pieces and sequencing them we get the following results:
+Now we know the distribution that we would expect if the DNA mutationrate follows a Poisson distribution (figure 5) we can compare it against our observed data. After fragmenting our hypothetical sample DNA into 1kb pieces and sequencing them we get the following results:
 
-```{r}
+```{r, echo = FALSE}
 mutationresults <- c(740, 218, 37, 5, 0, 0)
 
 options(digits = 3)
@@ -243,16 +245,15 @@ knitr::kable(data.frame("mutations per kb" = c("0", "1", "2", "3", "4", "5+"),
                         "expected number of fragments" = mutationprobability *1000,
                         "observed number of fragments" = mutationresults), 
              align = "c", row.names = FALSE, 
-             col.names = c("mutations per kb", "expected number of fragments", "observed number of fragments"),
-             caption = "Results")
+             col.names = c("mutations", "expected number of fragments", "observed number of fragments"),
+             caption = "Table 1: expected and observed results.")
 options(digits = 10)
 ```
 
-The results look fairly close to the expected results if the mutationrate of DNA follows a poisson distribution. We can test this using a chi-squared test.
-The chi-squared test determines whether there is a statistically significant difference between expected frequencies and observed frequencies.
+The results look fairly close to the expected results if the mutationrate of DNA follows a Poisson distribution. We can test this using a chi-squared test. The chi-squared test determines whether there is a statistically significant difference between expected frequencies and observed frequencies.
 
-H0: Observed frequencies follow expected frequencies, the mutationrate of DNA follows a poisson distrubution.
-H1: Observed frequencies do not follow expected frequencies, the mutationrate of DNA does not follow a poisson distribution
+H0: Observed frequencies follow expected frequencies, the mutationrate of DNA follows a Poisson distrubution.  
+H1: Observed frequencies do not follow expected frequencies, the mutationrate of DNA does not follow a Poisson distribution  
 ```{r}
 chisq.test(x = mutationresults, p = mutationprobability)
 ```
@@ -260,17 +261,17 @@ chisq.test(x = mutationresults, p = mutationprobability)
 the p-value > 0.05 so we accept H0.
 
 
-## Exercise: V1 flying bomb. Guided weapon or does something smell a bit fishy? 
+## Exercise: V1 flying bomb. Guided weapon or a case of Poisson distribution? 
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 1: Illustration of a V1 flying bomb. The V stands for 'vergeltungswaffen' (vengeance weapon) and was used to terrorize London civilians in the second world war."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 6: Illustration of a V1 flying bomb. The V stands for 'vergeltungswaffen' (vengeance weapon) and was used to terrorize London civilians in the second world war."}
 knitr::include_graphics(path =here::here("images", "V1_cutaway.JPG"))
 ```
 
-Poisson distributions occur in all kinds of unexpected places. During World War 2 the German army developed a flying bomb (V1 and later V2) to terrorize civilians in London. The impact sites of these bombs tended to be grouped in clusters. This made the English wonder whether these clusters were the result of some aiming mechanism on the bombs or if it was just chance. Statistician R. D. Clarke set out to tackle this problem (clarke1946). He selected a 144 km^2^area on the map of south London and divided it in 576 squares of 0,25 km^2^. Counting the recorded impacts over the last x months Clarke determined there had been 537 impacts of flying bombs in the selected area.    
+Poisson distributions occur in all kinds of unexpected places. During World War 2 the German army developed a flying bomb (V1 and later V2) to terrorize civilians in London. The impact sites of these bombs tended to be grouped in clusters. This made the English wonder whether these clusters were the result of some aiming mechanism on the bombs or if it was just chance. Statistician R. D. Clarke set out to tackle this problem (Clarke 1946^[Clarke, R. (1946). An application of the Poisson distribution. Journal of the Institute of Actuaries, 72(3), 481-481. doi:10.1017/S0020268100035435]). He selected a 144 km^2^area on the map of south London and divided it in 576 squares of 0,25 km^2^. Counting the recorded impacts over the last x months Clarke determined there had been 537 impacts of flying bombs in the selected area.    
 
-**Question 1: Use the information given above to calculate the probabilities that a given square had 0,1,2,3,4 or 5+ impacts if the impacts were distributed according Poisson probabillity. Click the "code" button to reveal the answer.**
+**Exercise 2: Use the information given above to calculate the probabilities that a given square had 0,1,2,3,4 or 5+ impacts if the impacts were distributed according Poisson probability.**
 
-
+Open the codeblock to reveal the answer.
 ```{r, echo = TRUE}
 #First we calculate the chance that a given square got bombed 0,1,2,3 or 4 times.
 zero_to_four <- dpois(x = 0:4, lambda = 537/576)
@@ -287,43 +288,38 @@ poissonexpectation
  
 Next Clarke counted the number of squares that contained 0,1,2,3,4 and 5+ bomb impacts. Clarke hypothesized that if the V1 flying bombs contained an aiming mechanism there would be a disproportionate amount of squares containing either relatively high number of impacts or none at all. 
 
-```{r}
+```{r, echo = FALSE}
 options(digits = 3)
 knitr::kable(data.frame("impacts per square" = c("0", "1", "2", "3", "4", "5+"),
                         "expected amount of squares" = poissonexpectation*576,
                         "actual amount of squares" = c(229, 211, 93, 35, 7, 1)), 
              align = "c", row.names = FALSE, 
              col.names = c("impacts per square", "expected amount of squares", "actual amount of squares"),
-             caption = "R.D. Clarke's results")
+             caption = "Table 2: R.D. Clarke's results")
 options(digits = 10)
 ```
 
-As you can see from just looking at the results the poisson distribution predicted the actual distribution quite effectively. Te verify that the bomb impacts follow a poisson distribution we can perform a chi-squared test using the chisq.test function in R. 
+**Exercise 3:Perform a chi-squared test to verify the results follow the Poisson distribution using the chisq.test function in R.** 
 
+Open the codeblock to reveal the answer.
 ```{r}
 bombdata <- c(229, 211, 93, 35, 7, 1)
 
 # chi square testing 
 chisq.test(x = bombdata, p = poissonexpectation)
 
-```
 
-This result is in line with what we know about the V1 today: It could only be aimed in the general direction of London but not guided to a more specific target like a building or a block of buildings. 
+#This result is in line with what we know about the V1 today: It could only be aimed in the general direction of London but not guided to a more specific target like a building or a block of buildings. 
+```
 
 ## Maximum likelihood estimation
 
-So far we have used a top-down approach. We had a big dataset with a known lambda and we compared it to the distribution with the same lambda. Usually the lambda that generated the data is not known and has to be estimated. Estimating a parameter like this can be done using a method called maximum likelihood estimation (MLE). MLE calculated the lambda which makes the observed data most probable to observe. To understand how this method works we can generate a poisson dataset with a known lambda
-
-```{r, include = FALSE, echo = FALSE}
-set.seed(2)
-```
+So far we have used a top-down approach. We had a big dataset with a known $\lambda$ and we compared it to the distribution with the same $\lambda$. Usually the $\lambda$ that generated the data is not known and has to be estimated. Estimating a parameter like this can be done using a method called maximum likelihood estimation (MLE). MLE calculated the $\lambda$ which makes the observed data most probable to observe. To understand how this method works we can generate a Poisson dataset with a known $\lambda$.
 
 
 ```{r}
-#Create 40 poisson distributed data points. We set the lambda to be 100 however we are going to pretend we dont know the lambda is 100 and try to estimate lambda from the data.
-reads <- rpois(n = 3, lambda = 100)
-mean(reads)
-#df_mle <- data.frame(reads = reads)
+#Create 40 Poisson distributed data points. We set the $\lambda$ to be 100 however we are going to pretend we dont know the $\lambda$ is 100 and try to estimate $\lambda$ from the data.
+reads <- rpois(n = 40, lambda = 100)
 
 ggplot(data = data.frame(reads = reads), aes(x = reads)) + 
   geom_histogram(bins = 40)
@@ -331,13 +327,13 @@ ggplot(data = data.frame(reads = reads), aes(x = reads)) +
 
 
 ```{r}
-#calculate single datapoint for a single lambda
+#calculate single datapoint for a single $\lambda$
 dpois(reads[1], lambda = 95)
 ```
 
 
-After taking a look at the plot we decide the lambda must lie somewhere between 70 and 130.
-So we want to know what lambda between 70 and 130 is most likely for the first data point. 
+After taking a look at the plot we decide the $\lambda$ must lie somewhere between 70 and 130.
+So we want to know what $\lambda$ between 70 and 130 is most likely for the first data point. 
 
 ```{r}
 dpois(reads[1], lambda = seq(from = 70, to = 130))
@@ -356,8 +352,13 @@ log_likelihood <- dpois(reads[1], lambda = seq(from = 70, to = 130), log = TRUE)
 log_likelihood <- data.frame(log_likelihood = log_likelihood)
 
 ggplot(data = log_likelihood, aes(x = seq(from = 70, to = 130), y = log_likelihood)) +
-  geom_point()
+  geom_point() +
+  xlab("lambda")
 ```
+
+Until now we only took 1 datapoint and calculated the likelihood it was generated by a $\lambda$ from 70 to 130. 
+To estimate the $\lambda$ of the complete dataset we are going to take the sum of probabilities at each datapoint. 
+To do this we first write a function to calculate the sum of 1 datapoint:
 
 ```{r}
 MLE_function <- function(lambda, datapoint){
@@ -365,8 +366,9 @@ MLE_function <- function(lambda, datapoint){
   return(probabilities)
 }
 
-MLE_function(seq(from = 70, to = 130), reads[1])
 ```
+
+Next we can apply the function to all the datapoints:
 
 ```{r}
 all_data_log_likelihood <- (sapply(seq(from = 70, to = 130),function(x){MLE_function(x,reads)}))
@@ -374,11 +376,19 @@ all_data_log_likelihood <- data.frame(all_data_log_likelihood = all_data_log_lik
 
 ```
 
+And plot the results with a red line showing the most likely estimate of $\lambda$: 
+
 ```{r}
 ggplot(data = all_data_log_likelihood, aes(x = lambda, y = all_data_log_likelihood)) +
   geom_point() +
-  geom_vline(xintercept = all_data_log_likelihood$lambda[which.max(all_data_log_likelihood$all_data_log_likelihood)], color="red",size=2)
+  geom_vline(xintercept = all_data_log_likelihood$lambda[which.max(all_data_log_likelihood$all_data_log_likelihood)], color="red",size=2) +
+  ylab("probability")
 ```
+
+Depending on your seed the $\lambda$ estimated can vary but it should approach 100.
+
+*@Marc: We hadden dit vorige week al besproken maar de MLE lambda is nogsteeds gelijk aan het gemiddelde van de reads. Misschien is Poisson gewoon een slecht voorbeeld om een MLE mee te doen. In principe is het bovenstaande stuk over MLE nu zo goed als gelijk aan de website die je mij doorstuurde: https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/*
+
 
 ## Estimation of size factor: "Normalizing" the data 
 
@@ -400,7 +410,6 @@ Now we know what is what we would like to know if both conditions have an equal 
 #total reads per treatment.
 sum(assay(airway[,airway$dex == "trt"]))
 sum(assay(airway[,airway$dex == "untrt"]))
-
 ```
 
 The difference is not huge. But its still 3.6 million reads less in the treated group. Could it be that the treated group has some genes downregulated? Or is something else going on?
@@ -433,7 +442,7 @@ To do this we calculate a size factor. We could take the total reads of sample 2
 This method is flawed as we can see in figure x. The blue line represents the size factor we just calculated. Using this size factor implies gene A,B,D and E are upregulated and gene C is downregulated. However this is not likely the case. It is more likely that  A,B,D and E are present in equal amounts in both samples and gene C is downregulated in sample 2. The higher countnumber of A,B,D and E is a result of the difference in read depth. If we plot a regression line through these points (red line) we get a more exact size factor that estimates only the difference in read depth and not the difference in expression of genes (If lots of genes are upregulated it is expected to find more mRNA's in a cell overall). In this hypothetical dataset the sizefactor calculated by the red line is 1.5.  This last method is what DESeq2 uses to estimate the size factor.
 
 
-```{r, echo = FALSE, fig.align='center', out.width='75%', fig.cap="Figure x: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: mod stat mod bio chapter 8 fig 8.1."}
+```{r, echo = FALSE, fig.align='center', out.width='75%', fig.cap="Figure 8: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology"}
 szfcDemo = data.frame(
   x = c(2, 4, 6, 6,  8) * 10,
   y = c(3, 6, 2, 9, 12) * 10,
@@ -466,6 +475,9 @@ reads_per_sample <- mutate(reads_per_sample,
                            reads_adjust = reads_per_sample$reads/reads_per_sample$sizefactor)
 ```
 
+
+Now we have adjusted the reads for the size factor we can plot the total reads again and see if the samples have become more equal:
+
 ```{r}
 ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads_adjust, fill = dextreatment)) +
   geom_col()
@@ -482,18 +494,18 @@ The control genes can come in 2 forms:
 
 ## Estimating dispersion (second step of DESeq2) and negative binomial distribution  
 
-At first it was believed that the expression of a gene followed a poisson distribution. 
+At first it was believed that the expression of a gene followed a Poisson distribution. 
 It turned out however that this was only the case when evaluating samples that were technical replicates. 
 
-The main problem with the poisson distribution is the lambda parameter because in this distribtion: lambda = mean = variance. 
-To accurately model the data we need a distribution that uses seperate parameters for mean and variance (dispersion). 
+The main problem with the Poisson distribution is the $\lambda$ parameter because in this distribtion: $\lambda$ = mean = variance. 
+To accurately model the data we need a distribution that uses separate parameters for mean and variance (dispersion). 
 This is where the negative binomial distribution comes in. It accepts these parameters and is used by DEseq to model the data. 
 Before we can use this distribution however we do need to find out what these 2 parameters are. 
 The mean is simple enough but what about the dispersion parameter?
 
 Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then "shrinks" the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure x).
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 9: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
 
 ddsSE_airway <- DESeq2::DESeqDataSet(airway, design =  ~dex)
 keep <- rowSums(counts(ddsSE_airway)) >= 10
@@ -511,48 +523,27 @@ dispersiondataframe <- data.frame(assay(ddsDE_airway)) %>%
 head(dispersiondataframe)
 ```
 
-## Binomial wald test
+Once the mean and dispersion of each gene have been estimated DESeq2 tests for significant differential expression between genes before and after treatment. Once the analysis is complete we can get the results using the res() function. Next we arrange genes so that the genes with the smallest p adjusted come first and show the head of the results:
 
 ```{r}
-#use view(dispersiondataframe) and pick any gene you want. Here we choose ENSG00000033867
-barplot(assay(subset(airway, rownames(airway) %in% "ENSG00000033867")))
-
-# Dit stukje wil ik graag gebruiken om een opdracht mee te maken dat studenten zelf een gen uit kunnen kiezen om te testen voor differentiatie
+res <- results(ddsDE_airway)
+res[order(res$padj), ] %>% head
 ```
 
+Annotating the results to show a gene-name instead of a ensembl ID will be covered in another lesson.
 
-
-```{r}
-#Maar eerst even een test uitvoeren met gewoon 2 samples die door R zijn gegenereerd. Ik heb hier even 2 means gekozen.
-sample1 <- rnbinom(4, size = (0.027 * 865), mu = 865)
-sample2 <- rnbinom(4, size = (0.027 * 1312), mu = 1312)
-
-sample1
-sample2
-
-# Maar het lukt me dus niet om een binomial wald test uit te voeren op de 2 test samples. 
-
-# Want eigenlijk willen we hier toch het volgende testen?
-#H0: Sample 1 en sample 2 zijn gegenereerd door 1 distributie met dispersie x en mean y.
-#H1: sample 1 en sample 2 zijn niet gegenereerd door 1 distributie met dispersie x en mean y. Maar zijn differentiaal tot expressie gekomen. 
-
-# Maar dat lukt me dus niet echt. Want de functie uit de DESeq2 package nbinomWaldTest() kan ik hier dus niet voor gebruiken helaas. 
-# Kun jij me misschien verder helpen Marc? 
-```
-
-
-# Exploring results
+# **Exploring results**
 
 ## Histogram of p-values
 
-The first plot is a histogram of p-values. The left peak is the number of genes with a p < 0.01.
+The first plot is a histogram of p-values (figure 10). The left peak is the number of genes with a p < 0.01.
 This plot gives us the possibility to make a rough estimation of the False Discovery Rate (FDR). 
 Because we are looking at so many genes there are bound to be some genes that just happen to be differentially expressed. Looking at the area to the right of p > 0.05 we get an idea of the scale of this "background". 
 
 For example: If we look at the background we see that about 175-200 genes happen to have a p-value of 0.75. The same goes for most p-values > 0.10. So it is likely that about 175-200 genes in the left peak just happen to be differentially expressed regardless of the experimental condition. About 2900 genes in total have a p < 0.01. 
 200/2900 = 0.068. So about 7% of our differentially expressed genes are false positives (type I error). 
 
-```{r}
+```{r, fig.cap = "Figure 10: Histogram of P values for the airway dataset results."}
 res <- results(ddsDE_airway)
   
 ggplot(as(res, "data.frame"), aes(x = pvalue)) +
@@ -629,7 +620,7 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 Data can contain a lot of variables. Some might even be unknown to us. To get an idea of the variance in our data and what variables (principal components) are mainly responsible for this variance we can do a Principal Component Analysis (PCA). A principal component analysis tries to compress a big amount of data into a single point on a plot to show relations or clusters and what principal components cause these clusters.   
 
 
-```{r, fig.cap="Figure x: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular."}
+```{r, fig.cap="Figure 11: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular."}
 #principal component analysis
 ddsDE_rlog_airway <- ddsDE_airway %>%
   rlogTransformation() 
@@ -641,37 +632,37 @@ ddsDE_rlog_airway %>%
   geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
 ```
 
-PCA compresses the data by reducing the dimensions in the data. 
+PCA compresses the data by reducing the dimensions in the data. A simple example of dimension reduction can be seen in figure 12 and 13. By rotating the line fitted through the data it can be compressed from 2 dimensions to 1 dimension while maintaining the component that cause the most variance in the 2 dimensions. 
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: Reads for 2 correlating samples. A principal component line is fitted through it and the datapoints are projected onto the line"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 12: Reads for 2 correlating samples. A principal component line is fitted through it and the datapoints are projected onto the line. Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "PCA1.png"))
 ```
 
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: The line is rotated so the red dots represent the 2 dimensional data (x and y) in 1 dimension (x)"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 13: The line is rotated so the red dots represent the 2 dimensional data (x and y) in 1 dimension (x). Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "PCA2.png"))
 ```
 
 The one dimensional data can be described with an "eigenvalue". This value represents the variance introduced by a variable. The eigenvalues of a dataset can be plotted in a scree plot.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure x: A scree plot showing the eigenvalues of each dimension. Dimension 1 and 2 (PC1 and PC2) are responsible for most variance in the data so a 2 dimensional PCA plot can accurately portray the data."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 14: A scree plot showing the eigenvalues of each dimension. Dimension 1 and 2 (PC1 and PC2) are responsible for most variance in the data so a 2 dimensional PCA plot can accurately portray the data. Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "scree.png"))
 ```
 
 If the eigenvalue of PC3 is about equal to the eigenvalue of PC2 it is not possible to accurately plot the data in 2 dimensions and a 3d PCA plot should be used.
 
-# Transcript length bias
+## Transcript length bias
 
 A much overlooked bias is the transcript length bias. This bias is the result of longer mRNA molecules being broken up into more fragments compared to shorter mRNA's. This results in overrepresentation of longer genes *within* samples. It is possible to correct for this within sample variation but doing so introduces variation between samples. Since we are usually interested in the differential expression of genes between samples we choose to leave the transcript length bias as is.   
 However it is important to be aware of its presence.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: mortazavi 2008"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 15:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: Mortazavi 2008"}
 knitr::include_graphics(path =here::here("images", "mortazavi2008_transcript_length_bias.jpg"))
 ```
 
 To get an idea of the scale of this bias in our dataset we can plot the genelength in basepairs versus the % differentially expressed.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure x) A: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. B: After performing a log fold shrink the bias becomes magnified."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 16) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified."}
 
 #annotate airway dataset with transcript length to check for transcript length bias. 
 # Dit script moet nog even netter gemaakt worden. Niet alle namen zijn even duidelijk
@@ -759,7 +750,7 @@ graph2 <- ggplot(data = length_bias, aes(x = lengthoftranscript, y = percentage,
 grid.arrange(graph1, graph2, ncol=2)
 ```
 
-
+# **Bibliography**
 
 
 
