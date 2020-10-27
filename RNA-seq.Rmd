@@ -20,67 +20,57 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, include = TRUE)
 ```
 #Foreword
-During my minor I attended a "Advanced Bioinformatics" course. For 
-
+During my minor I attended an "Advanced Bioinformatics" course. For the exam each student got assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis.   
 
 # Introduction
-
-To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020	SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 (^Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.)
+To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020	SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 (^Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.) This analysis used the DESeq2 workflow by Love et al., 2014(^ Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8)
 
 # Differential expression analysis
-This analysis used the DESeq2 workflow by Love et al., 2014(^ Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8)
 
-## loading libraries and setting root 
+## loading/installing packages
 ```{r, eval = FALSE, include = TRUE}
 #install libraries if not installed
 require("tidyverse") || utils::install.packages("tidyverse")
-require("rprojroot") || utils::install.packages("rprojroot")
 require("pheatmap") || utils::install.packages("pheatmap")
+require("here") || utils::install.packages("here")
 BiocManager::install("Biostrings")
 BiocManager::install("biomaRt")
 BiocManager::install("GEOquery")
 BiocManager::install("rnaseqGene")
 BiocManager::install("msa")
-BiocManager::install("iSEE")
 ```
 
 ```{r}
 #load libraries
 library(tidyverse)
-library(rprojroot)
 library(Biostrings)
 library(biomaRt)
 library(GEOquery)
 library(rnaseqGene)
 library(pheatmap)
 library(msa)
-library(iSEE)
-```
-
-```{r}
-#find the root file
-root <- find_root_file(criterion = is_rstudio_project)
+library(here)
 ```
 
 
-## Data Downloading
+## Data downloading and organizing
 
 ```{r}
+#Downloading expressionset and supplementary files.
 GSE147507 <- getGEO('GSE147507', destdir=".", GSEMatrix = TRUE)
 GSE147507_supp <- getGEOSuppFiles('GSE147507', makeDirectory = TRUE, baseDir = getwd(),
   fetch_files = TRUE, filter_regex = NULL)
 
-#there is human and ferret data. We select the human data. 
+#There is human and ferret data. We select the human data. 
 gse_human <- GSE147507[[1]]
 ```
 
-
 ## Generating a summarizedexperiment 
 ```{r}
-# First we obtain all the datatypes needed.
+# First we need to obtain the countsdata,phenodata,featuredata and metadata so they can be manipulated individually later.
 
 #We start with assay data (countsdata)
-raw_counts_human <- read_tsv(file.path(root, "GSE147507", "GSE147507_RawReadCounts_Human.tsv.gz"))
+raw_counts_human <- read_tsv(file = here::here("GSE147507", "GSE147507_RawReadCounts_Human.tsv.gz"))
 
 #obtaining phenotypic data. contains all the info regarding each sample. 
 phenodata_human <- pData(gse_human) %>% as_tibble
