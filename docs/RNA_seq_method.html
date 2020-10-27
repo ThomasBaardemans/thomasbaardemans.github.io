@@ -473,12 +473,6 @@ div.tocify {
   border-radius: 0px;
 }
 
-.tocify-subheader {
-  display: inline;
-}
-.tocify-subheader .tocify-item {
-  font-size: 0.95em;
-}
 
 </style>
 
@@ -520,7 +514,7 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="Advanced_Bioinformatics_DESeq2.html">RNA-seq: Method</a>
+  <a href="RNA_seq_method.html">RNA-seq: Method</a>
 </li>
 <li>
   <a href="python.html">Python</a>
@@ -657,13 +651,13 @@ Figure 2: Ambiguous reads present a problem in assigning a read to specific isof
 <p>A binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. The simplest example of a binomial distribution is the coin toss. Each “cointoss” is called a Bernoulli trial.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">#randomly generate 10 cointosses</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="kw">rbinom</span>(<span class="dt">n =</span> <span class="dv">10</span>, <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.5</span>)</span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 0 1 1 1 0 0 0 0 1 1</span></span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 1 0 0 1 1 0 0 1 1 0</span></span></code></pre></div>
 <p>exercise: Use rbinom to simulate 100 <strong>double</strong> die rolls. Where throwing 6 is considered “succes” and everything below a “fail”. The results should show a “1” when a single 6 has been rolled and “2” when both die rolled a 6.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Answer:</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="kw">rbinom</span>(<span class="dv">100</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 0 1 1 0 1 1 0 0 0 1 0 0 0 0 0 1 1 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 1 1</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 0 0 1 0 0 1 0 1 1 1 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 0 1 0</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 0 2 0 1 1 0 0 0 0 0 2 0 1 0 0 2 0 0 0 0 0 1 0 0 0 0</span></span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 0 0 1 0 0 0 0 1 1 0 2 0 0 0 1 1 0 1 2 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 0 0 0 1 0 0 0 0 1 0 0 2 0 1 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 1 0 1 0 0 1 0</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 0 0 0 1 0 0 0 2 0 0 0 0 1 0 1 1 1 2 0 0 1 1 0 0 0 0</span></span></code></pre></div>
 <p>To get complete distribution of probabilities we use dbinom. note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability. This also works with other statistical distributions as we will see later on in the lesson.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">#probability that 6 is thrown twice.</span></span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="kw">dbinom</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
@@ -674,7 +668,7 @@ Figure 2: Ambiguous reads present a problem in assigning a read to specific isof
 <span id="cb6-7"><a href="#cb6-7"></a><span class="co">## [1] 0.69444444 0.27777778 0.02777778 0.00000000</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">barplot</span>(<span class="kw">dbinom</span>(<span class="dv">0</span><span class="op">:</span><span class="dv">3</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>), <span class="dt">names.arg =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">3</span>)</span></code></pre></div>
 <div class="figure">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/echo%20is%20false-1.png" alt="Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes." width="672" />
+<img src="RNA_seq_method_files/figure-html/echo%20is%20false-1.png" alt="Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes." width="672" />
 <p class="caption">
 Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes.
 </p>
@@ -685,7 +679,7 @@ Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes.
 <p>When the probability of success p is small and the number of trials n large, the binomial distribution can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np. (Recited from: Modern Statistics for Modern Biology<a href="#fn7" class="footnote-ref" id="fnref7"><sup>7</sup></a>)</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">barplot</span>(<span class="kw">dpois</span>(<span class="dt">x =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">12</span>, <span class="dt">lambda =</span> <span class="dv">6</span>), <span class="dt">names.arg =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">12</span>, <span class="dt">col =</span> <span class="st">&quot;#2780e3&quot;</span>, <span class="dt">xlab =</span> <span class="st">&quot;k&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;P(X=k)&quot;</span>)</span></code></pre></div>
 <div class="figure">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-9-1.png" alt="figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda" width="672" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-9-1.png" alt="figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda" width="672" />
 <p class="caption">
 figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda
 </p>
@@ -713,7 +707,7 @@ figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(
 <span id="cb10-6"><a href="#cb10-6"></a>mutationprobability &lt;-<span class="st"> </span><span class="kw">c</span>(mutationprobability, <span class="dv">1</span><span class="op">-</span><span class="kw">sum</span>(mutationprobability))</span></code></pre></div>
 and we can also plot these values to get a visual of the distribution
 <div class="figure">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-12-1.png" alt="Figure 5: Distribution of mutations/kb for lambda = 0.307" width="672" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-12-1.png" alt="Figure 5: Distribution of mutations/kb for lambda = 0.307" width="672" />
 <p class="caption">
 Figure 5: Distribution of mutations/kb for lambda = 0.307
 </p>
@@ -862,35 +856,35 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <span id="cb14-3"><a href="#cb14-3"></a></span>
 <span id="cb14-4"><a href="#cb14-4"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="kw">data.frame</span>(<span class="dt">reads =</span> reads), <span class="kw">aes</span>(<span class="dt">x =</span> reads)) <span class="op">+</span><span class="st"> </span></span>
 <span id="cb14-5"><a href="#cb14-5"></a><span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">bins =</span> <span class="dv">40</span>)</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="co">#calculate single datapoint for a single $\lambda$</span></span>
 <span id="cb15-2"><a href="#cb15-2"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="dv">95</span>)</span>
 <span id="cb15-3"><a href="#cb15-3"></a><span class="co">## [1] 0.04089472617</span></span></code></pre></div>
 <p>After taking a look at the plot we decide the <span class="math inline">\(\lambda\)</span> must lie somewhere between 70 and 130. So we want to know what <span class="math inline">\(\lambda\)</span> between 70 and 130 is most likely for the first data point.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
-<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 0.0010051392131 0.0014028161356 0.0019216582541 0.0025850911481</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 0.0034167577017 0.0044391191725 0.0056718043050 0.0071297983636</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 0.0088215977870 0.0107474813240 0.0128980606019 0.0152532689734</span></span>
-<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 0.0177819259012 0.0204419759757 0.0231814500272 0.0259401356921</span></span>
-<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 0.0286518824944 0.0312474087678 0.0336574308966 0.0358159045027</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 0.0376631555732 0.0391486881028 0.0402334823160 0.0408916406139</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 0.0411112922003 0.0408947261699 0.0402577808313 0.0392285688718</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 0.0378456594192 0.0361558663134 0.0342118057772 0.0320693864797</span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 0.0297853823651 0.0274152161548 0.0250110522975 0.0226202656486</span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 0.0202843194428 0.0180380558360 0.0159093764533 0.0139192702550</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 0.0120821322087 0.0104063086494 0.0088948032484 0.0075460802687</span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 0.0063549081342 0.0053131950888 0.0044107787615 0.0036361417866</span></span>
-<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 0.0029770354787 0.0024210023588 0.0019557957059 0.0015697001061</span></span>
-<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 0.0012517611813 0.0009919353996 0.0007811723043 0.0006114418675</span></span>
-<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 0.0004757192324 0.0003679380957 0.0002829226071 0.0002163061118</span></span>
-<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 0.0001644434795</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 0.0007406288939 0.0010484204803 0.0014564146768 0.0019864384612</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 0.0026614744203 0.0035045677678 0.0045374434440 0.0057788892000</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 0.0072429960778 0.0089373792063 0.0108615247174 0.0130054188089</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 0.0153486097253 0.0178598316419 0.0204972821293 0.0232095950929</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 0.0259374936265 0.0286160480295 0.0311774096727 0.0335538473762</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 0.0356808842272 0.0375003222879 0.0389629512955 0.0400307639694</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 0.0406785417561 0.0408947261699 0.0406815469453 0.0400544334796</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 0.0390407855061 0.0376782185792 0.0360124271339 0.0340948214153</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 0.0319800947499 0.0297238659362 0.0273805204098 0.0250013462432</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 0.0226330301151 0.0203165470995 0.0180864490206 0.0159705311347</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 0.0139898372942 0.0121589501061 0.0104865048823 0.0089758638986</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 0.0076258897611 0.0064317624759 0.0053857930141 0.0044781956740</span></span>
+<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 0.0036977914367 0.0030326240074 0.0024704787863 0.0019993022404</span></span>
+<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 0.0016075248854 0.0012842953068 0.0010196354288 0.0008045287730</span></span>
+<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 0.0006309539292 0.0004918751385 0.0003812009865 0.0002937209308</span></span>
+<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 0.0002250279193</span></span>
 <span id="cb16-18"><a href="#cb16-18"></a></span>
 <span id="cb16-19"><a href="#cb16-19"></a>likelihood &lt;-<span class="st"> </span><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
 <span id="cb16-20"><a href="#cb16-20"></a>likelihood &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">likelihood =</span> likelihood)</span>
 <span id="cb16-21"><a href="#cb16-21"></a></span>
 <span id="cb16-22"><a href="#cb16-22"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> likelihood, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>), <span class="dt">y =</span> likelihood)) <span class="op">+</span></span>
 <span id="cb16-23"><a href="#cb16-23"></a><span class="st">  </span><span class="kw">geom_point</span>()</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <p>As you can see there are a lot of small numbers. Because these numbers sometimes need to be multiplied later on in the estimation process we use a log transform. This transform is done because multiplying very small numbers soon become smaller than the CPU of the computer can represent in its memory (arithmatic underflow). To do this we can simply add “log = TRUE” to the dpois function.</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>log_likelihood &lt;-<span class="st"> </span><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>), <span class="dt">log =</span> <span class="ot">TRUE</span>)</span>
 <span id="cb17-2"><a href="#cb17-2"></a>log_likelihood &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">log_likelihood =</span> log_likelihood)</span>
@@ -898,7 +892,7 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <span id="cb17-4"><a href="#cb17-4"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> log_likelihood, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>), <span class="dt">y =</span> log_likelihood)) <span class="op">+</span></span>
 <span id="cb17-5"><a href="#cb17-5"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
 <span id="cb17-6"><a href="#cb17-6"></a><span class="st">  </span><span class="kw">xlab</span>(<span class="st">&quot;lambda&quot;</span>)</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>Until now we only took 1 datapoint and calculated the likelihood it was generated by a <span class="math inline">\(\lambda\)</span> from 70 to 130. To estimate the <span class="math inline">\(\lambda\)</span> of the complete dataset we are going to take the sum of probabilities at each datapoint. To do this we first write a function to calculate the sum of 1 datapoint:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>MLE_function &lt;-<span class="st"> </span><span class="cf">function</span>(lambda, datapoint){</span>
 <span id="cb18-2"><a href="#cb18-2"></a>  probabilities &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">dpois</span>(datapoint, lambda, <span class="dt">log =</span> <span class="ot">TRUE</span>))</span>
@@ -912,7 +906,7 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <span id="cb20-2"><a href="#cb20-2"></a><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></span>
 <span id="cb20-3"><a href="#cb20-3"></a><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> all_data_log_likelihood<span class="op">$</span>lambda[<span class="kw">which.max</span>(all_data_log_likelihood<span class="op">$</span>all_data_log_likelihood)], <span class="dt">color=</span><span class="st">&quot;red&quot;</span>,<span class="dt">size=</span><span class="dv">2</span>) <span class="op">+</span></span>
 <span id="cb20-4"><a href="#cb20-4"></a><span class="st">  </span><span class="kw">ylab</span>(<span class="st">&quot;probability&quot;</span>)</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
 <p>Depending on your seed the <span class="math inline">\(\lambda\)</span> estimated can vary but it should approach 100.</p>
 <p><em><span class="citation">@Marc</span>: We hadden dit vorige week al besproken maar de MLE lambda is nogsteeds gelijk aan het gemiddelde van de reads. Misschien is Poisson gewoon een slecht voorbeeld om een MLE mee te doen. In principe is het bovenstaande stuk over MLE nu zo goed als gelijk aan de website die je mij doorstuurde: <a href="https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/" class="uri">https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/</a></em></p>
 </div>
@@ -980,10 +974,10 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <span id="cb23-11"><a href="#cb23-11"></a>                                )  </span></code></pre></div>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> reads_per_sample, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">8</span>, <span class="dt">y =</span> reads, <span class="dt">fill =</span> dextreatment)) <span class="op">+</span></span>
 <span id="cb24-2"><a href="#cb24-2"></a><span class="st">  </span><span class="kw">geom_col</span>()</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>In order to adjust for this effect we need to scale the reads so the total amount of reads will become (more) equal between samples. To do this we calculate a size factor. We could take the total reads of sample 2 and divide by the total reads of sample 1. 320/260 = 1.231. We could use this size factor to correct the reads of each genes so that the total number of reads in each sample will become equal. This method is flawed as we can see in figure x. The blue line represents the size factor we just calculated. Using this size factor implies gene A,B,D and E are upregulated and gene C is downregulated. However this is not likely the case. It is more likely that A,B,D and E are present in equal amounts in both samples and gene C is downregulated in sample 2. The higher countnumber of A,B,D and E is a result of the difference in read depth. If we plot a regression line through these points (red line) we get a more exact size factor that estimates only the difference in read depth and not the difference in expression of genes (If lots of genes are upregulated it is expected to find more mRNA’s in a cell overall). In this hypothetical dataset the sizefactor calculated by the red line is 1.5. This last method is what DESeq2 uses to estimate the size factor.</p>
 <div class="figure" style="text-align: center">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-30-1.png" alt="Figure 8: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology" width="75%" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-30-1.png" alt="Figure 8: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology" width="75%" />
 <p class="caption">
 Figure 8: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology
 </p>
@@ -1002,7 +996,7 @@ Figure 8: estimation of size factor. Dots represent genes. Blue and red lines re
 <p>Now we have adjusted the reads for the size factor we can plot the total reads again and see if the samples have become more equal:</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="kw">ggplot</span>(<span class="dt">data =</span> reads_per_sample, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">8</span>, <span class="dt">y =</span> reads_adjust, <span class="dt">fill =</span> dextreatment)) <span class="op">+</span></span>
 <span id="cb26-2"><a href="#cb26-2"></a><span class="st">  </span><span class="kw">geom_col</span>()</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
 <p>As you can see the range of total reads has drastically decreased. All samples now have between 20 and about 22,5 million total reads.</p>
 <p>Note: if you look at the help page of estimateSizeFactorsForMatrix you might notice the function also accepts an optional argument called controlGenes. The control genes can come in 2 forms:</p>
 <ul>
@@ -1016,7 +1010,7 @@ Figure 8: estimation of size factor. Dots represent genes. Blue and red lines re
 <p>The main problem with the Poisson distribution is the <span class="math inline">\(\lambda\)</span> parameter because in this distribtion: <span class="math inline">\(\lambda\)</span> = mean = variance. To accurately model the data we need a distribution that uses separate parameters for mean and variance (dispersion). This is where the negative binomial distribution comes in. It accepts these parameters and is used by DEseq to model the data. Before we can use this distribution however we do need to find out what these 2 parameters are. The mean is simple enough but what about the dispersion parameter?</p>
 <p>Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then “shrinks” the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure x).</p>
 <div class="figure" style="text-align: center">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-33-1.png" alt="Figure 9: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value." width="100%" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-33-1.png" alt="Figure 9: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value." width="100%" />
 <p class="caption">
 Figure 9: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value.
 </p>
@@ -1076,7 +1070,7 @@ Figure 9: Plot of dispersion estimates of airway dataset. The black dots represe
 <span id="cb29-3"><a href="#cb29-3"></a><span class="kw">ggplot</span>(<span class="kw">as</span>(res, <span class="st">&quot;data.frame&quot;</span>), <span class="kw">aes</span>(<span class="dt">x =</span> pvalue)) <span class="op">+</span></span>
 <span id="cb29-4"><a href="#cb29-4"></a><span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="fl">0.01</span>, <span class="dt">fill =</span> <span class="st">&quot;Royalblue&quot;</span>, <span class="dt">boundary =</span> <span class="dv">0</span>)</span></code></pre></div>
 <div class="figure">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-36-1.png" alt="Figure 10: Histogram of P values for the airway dataset results." width="672" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-36-1.png" alt="Figure 10: Histogram of P values for the airway dataset results." width="672" />
 <p class="caption">
 Figure 10: Histogram of P values for the airway dataset results.
 </p>
@@ -1107,7 +1101,7 @@ Figure 10: Histogram of P values for the airway dataset results.
 <span id="cb31-10"><a href="#cb31-10"></a></span>
 <span id="cb31-11"><a href="#cb31-11"></a><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dt">x =</span> genes, <span class="dt">y =</span> foldchange)) <span class="op">+</span></span>
 <span id="cb31-12"><a href="#cb31-12"></a><span class="st">  </span><span class="kw">geom_point</span>()</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
 <p>Now this graph shows the fold change for all the upregulated genes are &gt;1 and all the downregulated genes are between 0 an 1. These downregulated genes are a problem now because its still hard to compare upregulation and downregulation.</p>
 <p>The solution is taking the log2 of the fold change:</p>
 <div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a>df &lt;-<span class="st"> </span><span class="kw">mutate</span>(df, </span>
@@ -1122,7 +1116,7 @@ Figure 10: Histogram of P values for the airway dataset results.
 <span id="cb32-10"><a href="#cb32-10"></a></span>
 <span id="cb32-11"><a href="#cb32-11"></a><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dt">x =</span> genes, <span class="dt">y =</span> log2foldchange)) <span class="op">+</span></span>
 <span id="cb32-12"><a href="#cb32-12"></a><span class="st">  </span><span class="kw">geom_point</span>()</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-39-1.png" width="672" /> notice that due to the logarithmic scaling a gene with a fold change of 8 has a log2fold change of 3 because 2x2x2 = 8.</p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-39-1.png" width="672" /> notice that due to the logarithmic scaling a gene with a fold change of 8 has a log2fold change of 3 because 2x2x2 = 8.</p>
 <p>The result is a much clearer graph of relative differences in gene expression.</p>
 <p>The other parameter in the DESeq2 results is the lfcSE. This is short for Log2FoldChange Shrinkage Estimate. Shrinking the data is done because genes with low counts have less “statistical information”. The effect of this shrinkage is usually visualized using a MA plot. Shrinkage is estimated using a Empirical Bayes method. Bayesian statistics fall outside of the scope for this lesson but learning about it is time well-spent.</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1"></a><span class="kw">data</span>(airway)</span>
@@ -1137,9 +1131,9 @@ Figure 10: Histogram of P values for the airway dataset results.
 <span id="cb33-10"><a href="#cb33-10"></a>resLFC_airway &lt;-<span class="st"> </span><span class="kw">lfcShrink</span>(ddsDE_airway, <span class="dt">coef=</span><span class="st">&quot;dex_untrt_vs_trt&quot;</span>, <span class="dt">type=</span><span class="st">&quot;apeglm&quot;</span>)</span>
 <span id="cb33-11"><a href="#cb33-11"></a></span>
 <span id="cb33-12"><a href="#cb33-12"></a>DESeq2<span class="op">::</span><span class="kw">plotMA</span>(res, <span class="dt">main =</span> <span class="st">&quot;before lfc shrinkage&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>)</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-40-1.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-40-1.png" width="672" /></p>
 <div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a>DESeq2<span class="op">::</span><span class="kw">plotMA</span>(resLFC_airway, <span class="dt">main =</span> <span class="st">&quot;after lfc shrinkage&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>)</span></code></pre></div>
-<p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-40-2.png" width="672" /></p>
+<p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-40-2.png" width="672" /></p>
 </div>
 <div id="principal-component-analysis" class="section level2">
 <h2><span class="header-section-number">4.3</span> Principal Component Analysis</h2>
@@ -1154,7 +1148,7 @@ Figure 10: Histogram of P values for the airway dataset results.
 <span id="cb35-8"><a href="#cb35-8"></a><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="dv">0</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">colour =</span> <span class="st">&quot;red&quot;</span>) <span class="op">+</span></span>
 <span id="cb35-9"><a href="#cb35-9"></a><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">colour =</span> <span class="st">&quot;red&quot;</span>)</span></code></pre></div>
 <div class="figure">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-41-1.png" alt="Figure 11: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular." width="672" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-41-1.png" alt="Figure 11: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular." width="672" />
 <p class="caption">
 Figure 11: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular.
 </p>
@@ -1193,7 +1187,7 @@ Figure 15:Transcript length bias. Both red and green mRNA’s are present in equ
 </div>
 <p>To get an idea of the scale of this bias in our dataset we can plot the genelength in basepairs versus the % differentially expressed.</p>
 <div class="figure" style="text-align: center">
-<img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-46-1.png" alt="Figure 16) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified." width="100%" />
+<img src="RNA_seq_method_files/figure-html/unnamed-chunk-46-1.png" alt="Figure 16) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified." width="100%" />
 <p class="caption">
 Figure 16) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified.
 </p>
@@ -1277,7 +1271,7 @@ $(document).ready(function ()  {
       ignoreSelector: ".toc-ignore",
       scrollTo: 0
     };
-    options.showAndHide = false;
+    options.showAndHide = true;
     options.smoothScroll = true;
 
     // tocify
