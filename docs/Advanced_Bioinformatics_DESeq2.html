@@ -657,13 +657,13 @@ Figure 2: Ambiguous reads present a problem in assigning a read to specific isof
 <p>A binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. The simplest example of a binomial distribution is the coin toss. Each “cointoss” is called a Bernoulli trial.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">#randomly generate 10 cointosses</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="kw">rbinom</span>(<span class="dt">n =</span> <span class="dv">10</span>, <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.5</span>)</span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 1 1 1 0 1 0 1 0 0 0</span></span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 0 1 1 1 0 0 0 0 1 1</span></span></code></pre></div>
 <p>exercise: Use rbinom to simulate 100 <strong>double</strong> die rolls. Where throwing 6 is considered “succes” and everything below a “fail”. The results should show a “1” when a single 6 has been rolled and “2” when both die rolled a 6.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Answer:</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="kw">rbinom</span>(<span class="dv">100</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 0 0 0 1 1 0 0 0 0 1 0 1 0 1 0 0 1 0 0 1 0 0 0 0 0 1 0 1 0 0 0 1 1 1 0 0 0</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 1 1 0 1 2 1 1 0 0 0 1 0 1 0 0 0 0 0 1 0 0 0</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 1 0 0 0 0 0 0 0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0</span></span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 0 1 1 0 1 1 0 0 0 1 0 0 0 0 0 1 1 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 1 1</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 0 0 1 0 0 1 0 1 1 1 0 0 1 0 0 1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 1 1 0 0 1 0</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 0 2 0 1 1 0 0 0 0 0 2 0 1 0 0 2 0 0 0 0 0 1 0 0 0 0</span></span></code></pre></div>
 <p>To get complete distribution of probabilities we use dbinom. note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability. This also works with other statistical distributions as we will see later on in the lesson.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">#probability that 6 is thrown twice.</span></span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="kw">dbinom</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
@@ -865,25 +865,25 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <p><img src="Advanced_Bioinformatics_DESeq2_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="co">#calculate single datapoint for a single $\lambda$</span></span>
 <span id="cb15-2"><a href="#cb15-2"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="dv">95</span>)</span>
-<span id="cb15-3"><a href="#cb15-3"></a><span class="co">## [1] 0.03502523786</span></span></code></pre></div>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="co">## [1] 0.04089472617</span></span></code></pre></div>
 <p>After taking a look at the plot we decide the <span class="math inline">\(\lambda\)</span> must lie somewhere between 70 and 130. So we want to know what <span class="math inline">\(\lambda\)</span> between 70 and 130 is most likely for the first data point.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
-<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 0.0001377801374 0.0002093741215 0.0003119200497 0.0004558113953</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 0.0006536972494 0.0009205270220 0.0012734296240 0.0017313854199</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 0.0023146590368 0.0030439772618 0.0039394581592 0.0050193236355</span></span>
-<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 0.0062984555330 0.0077868818447 0.0094883013958 0.0113987690608</span></span>
-<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 0.0135056666438 0.0157870753409 0.0182116440275 0.0207390147455</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 0.0233208254251 0.0259022639247 0.0284241014626 0.0308250921575</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 0.0330445929376 0.0350252378643 0.0367154948958 0.0380719417475</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 0.0390611196720 0.0396608572120 0.0398609968091 0.0396635015160</span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 0.0390819628294 0.0381405700527 0.0368726335452 0.0353187766577</span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 0.0335249230756 0.0315402077886 0.0294149319786 0.0271986664991</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 0.0249385874985 0.0226781034823 0.0204558080201 0.0183047684081</span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 0.0162521395198 0.0143190749323 0.0125208948161 0.0108674621737</span></span>
-<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 0.0093637155293 0.0080103065765 0.0068042948039 0.0057398569194</span></span>
-<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 0.0048089761207 0.0040020841409 0.0033086368737 0.0027176117286</span></span>
-<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 0.0022179213281 0.0017987435066 0.0014497717284 0.0011613930149</span></span>
-<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 0.0009248023583</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 0.0010051392131 0.0014028161356 0.0019216582541 0.0025850911481</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 0.0034167577017 0.0044391191725 0.0056718043050 0.0071297983636</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 0.0088215977870 0.0107474813240 0.0128980606019 0.0152532689734</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 0.0177819259012 0.0204419759757 0.0231814500272 0.0259401356921</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 0.0286518824944 0.0312474087678 0.0336574308966 0.0358159045027</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 0.0376631555732 0.0391486881028 0.0402334823160 0.0408916406139</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 0.0411112922003 0.0408947261699 0.0402577808313 0.0392285688718</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 0.0378456594192 0.0361558663134 0.0342118057772 0.0320693864797</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 0.0297853823651 0.0274152161548 0.0250110522975 0.0226202656486</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 0.0202843194428 0.0180380558360 0.0159093764533 0.0139192702550</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 0.0120821322087 0.0104063086494 0.0088948032484 0.0075460802687</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 0.0063549081342 0.0053131950888 0.0044107787615 0.0036361417866</span></span>
+<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 0.0029770354787 0.0024210023588 0.0019557957059 0.0015697001061</span></span>
+<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 0.0012517611813 0.0009919353996 0.0007811723043 0.0006114418675</span></span>
+<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 0.0004757192324 0.0003679380957 0.0002829226071 0.0002163061118</span></span>
+<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 0.0001644434795</span></span>
 <span id="cb16-18"><a href="#cb16-18"></a></span>
 <span id="cb16-19"><a href="#cb16-19"></a>likelihood &lt;-<span class="st"> </span><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
 <span id="cb16-20"><a href="#cb16-20"></a>likelihood &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">likelihood =</span> likelihood)</span>
@@ -916,8 +916,8 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <p>Depending on your seed the <span class="math inline">\(\lambda\)</span> estimated can vary but it should approach 100.</p>
 <p><em><span class="citation">@Marc</span>: We hadden dit vorige week al besproken maar de MLE lambda is nogsteeds gelijk aan het gemiddelde van de reads. Misschien is Poisson gewoon een slecht voorbeeld om een MLE mee te doen. In principe is het bovenstaande stuk over MLE nu zo goed als gelijk aan de website die je mij doorstuurde: <a href="https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/" class="uri">https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/</a></em></p>
 </div>
-<div id="estimation-of-size-factor-normalizing-the-data" class="section level2">
-<h2><span class="header-section-number">3.6</span> Estimation of size factor: “Normalizing” the data</h2>
+<div id="estimation-of-size-factor" class="section level2">
+<h2><span class="header-section-number">3.6</span> Estimation of size factor</h2>
 <p>When comparing the read counts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other variables. Lets take a look at the “airway” dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid).</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a></span>
 <span id="cb21-2"><a href="#cb21-2"></a><span class="co">#Lets take a look at some of the assaydata</span></span>
@@ -1010,8 +1010,8 @@ Figure 8: estimation of size factor. Dots represent genes. Blue and red lines re
 <li>Housekeeping genes: These genes are essential for basic maintenance and function of the cell. Some of these are expressed at relatively constant rates.</li>
 </ul>
 </div>
-<div id="estimating-dispersion-second-step-of-deseq2-and-negative-binomial-distribution" class="section level2">
-<h2><span class="header-section-number">3.7</span> Estimating dispersion (second step of DESeq2) and negative binomial distribution</h2>
+<div id="estimating-dispersion-and-negative-binomial-distribution" class="section level2">
+<h2><span class="header-section-number">3.7</span> Estimating dispersion and negative binomial distribution</h2>
 <p>At first it was believed that the expression of a gene followed a Poisson distribution. It turned out however that this was only the case when evaluating samples that were technical replicates.</p>
 <p>The main problem with the Poisson distribution is the <span class="math inline">\(\lambda\)</span> parameter because in this distribtion: <span class="math inline">\(\lambda\)</span> = mean = variance. To accurately model the data we need a distribution that uses separate parameters for mean and variance (dispersion). This is where the negative binomial distribution comes in. It accepts these parameters and is used by DEseq to model the data. Before we can use this distribution however we do need to find out what these 2 parameters are. The mean is simple enough but what about the dispersion parameter?</p>
 <p>Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then “shrinks” the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure x).</p>

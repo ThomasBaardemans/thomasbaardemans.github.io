@@ -390,7 +390,7 @@ Depending on your seed the $\lambda$ estimated can vary but it should approach 1
 *@Marc: We hadden dit vorige week al besproken maar de MLE lambda is nogsteeds gelijk aan het gemiddelde van de reads. Misschien is Poisson gewoon een slecht voorbeeld om een MLE mee te doen. In principe is het bovenstaande stuk over MLE nu zo goed als gelijk aan de website die je mij doorstuurde: https://cmdlinetips.com/2019/03/introduction-to-maximum-likelihood-estimation-in-r/*
 
 
-## Estimation of size factor: "Normalizing" the data 
+## Estimation of size factor
 
 When comparing the read counts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other variables. 
 Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
@@ -492,7 +492,7 @@ The control genes can come in 2 forms:
 - Spike-in genes: These are artificial mRNA sequences that can be added in a known quantity to the sample.
 - Housekeeping genes: These genes are essential for basic maintenance and function of the cell. Some of these are expressed at relatively constant rates. 
 
-## Estimating dispersion (second step of DESeq2) and negative binomial distribution  
+## Estimating dispersion and negative binomial distribution  
 
 At first it was believed that the expression of a gene followed a Poisson distribution. 
 It turned out however that this was only the case when evaluating samples that were technical replicates. 
