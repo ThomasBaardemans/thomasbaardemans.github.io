@@ -92,7 +92,7 @@ Paralogues reads prove to be an even harder problem to solve. Paralogues genes a
 
 *Further reading: To understand the algorithm used to map reads to the genome while making efficient use of computing resources (Burrows-Wheeler transform) watch this lecture by MIT professor David Gifford: https://www.youtube.com/watch?v=P3ORBMon8aw*
 
-After assigning each read to a gene all the readcounts are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will lean how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
+After assigning each read to a gene all the readcounts are stored in an expression matrix file (Also referred to as counts data or assay data). This expression matrix is sometimes also included in the expressionset uploaded to GEO but more often than not it is a seperate file included in the supplementary files. In other lessons of the course you will learn how to organize this expressionset into a neat dataset ready to be analyzed. For this lesson we will use a dataset called "airway" that can be downloaded/installed using bioconductor. 
 
 
 ```{r, include = TRUE, collapse = FALSE}
@@ -392,19 +392,8 @@ Depending on your seed the $\lambda$ estimated can vary but it should approach 1
 
 ## Estimation of size factor
 
-When comparing the read counts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other variables. 
-Lets take a look at the "airway" dataset. This dataset contains the summarized experiment from an experiment that treated airway smooth muscle cells with dexamethasone (glucocorticosteroid). 
-
-```{r, echo = TRUE}
-
-#Lets take a look at some of the assaydata
-head(assay(airway))
-
-#some of the samples (columns in assaydata) are treated and some are not. To figure out which is which we take a look at the coldata
-colData(airway)
-```
-
-Now we know what is what we would like to know if both conditions have an equal amount of reads in them.
+When comparing the read counts of a gene between 2 experimental conditions we need to make sure that the difference is only influenced by the treatment and not by any other variables. For example: If the read depth of 1 sample x is twice the size of samply y we are likely to find twice as many reads for each gene. This makes it hard to compare samples so we need to correct for this difference.
+We can first take al ook at the total reads per treatment:
 
 ```{r, echo = TRUE}
 #total reads per treatment.
@@ -413,7 +402,7 @@ sum(assay(airway[,airway$dex == "untrt"]))
 ```
 
 The difference is not huge. But its still 3.6 million reads less in the treated group. Could it be that the treated group has some genes downregulated? Or is something else going on?
-The difference becomes more apparent if we take a look at the individual samples (fig x). The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker cellgrowth or the samples might nog have an equal sequencing depth. 
+The difference becomes more apparent if we take a look at the individual samples in figure 8. The total amount of reads ranges from 15 million to over 30 million within the treated condition! This difference can be due to multiple reasons: Conditions in the well might have been slightly different leading to quicker cellgrowth or the samples might nog have an equal sequencing depth. 
 
 ```{r}
 #create a dataframe with the total reads of all samples and their treatment. 
@@ -430,7 +419,7 @@ reads_per_sample <- data.frame(reads = c(sum(assay(airway[,1])),
 ```
 
 
-```{r}
+```{r, fig.cap = "Figure 8: Read depth varies between samples."}
 ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads, fill = dextreatment)) +
   geom_col()
 ```
@@ -439,10 +428,10 @@ ggplot(data = reads_per_sample, mapping = aes(x = 1:8, y = reads, fill = dextrea
 In order to adjust for this effect we need to scale the reads so the total amount of reads will become (more) equal between samples. 
 To do this we calculate a size factor. We could take the total reads of sample 2 and divide by the total reads of sample 1.
 320/260 = 1.231. We could use this size factor to correct the reads of each genes so that the total number of reads in each sample will become equal. 
-This method is flawed as we can see in figure x. The blue line represents the size factor we just calculated. Using this size factor implies gene A,B,D and E are upregulated and gene C is downregulated. However this is not likely the case. It is more likely that  A,B,D and E are present in equal amounts in both samples and gene C is downregulated in sample 2. The higher countnumber of A,B,D and E is a result of the difference in read depth. If we plot a regression line through these points (red line) we get a more exact size factor that estimates only the difference in read depth and not the difference in expression of genes (If lots of genes are upregulated it is expected to find more mRNA's in a cell overall). In this hypothetical dataset the sizefactor calculated by the red line is 1.5.  This last method is what DESeq2 uses to estimate the size factor.
+This method is flawed as we can see in figure 9. The blue line represents the size factor we just calculated. Using this size factor implies gene A,B,D and E are upregulated and gene C is downregulated. However this is not likely the case. It is more likely that  A,B,D and E are present in equal amounts in both samples and gene C is downregulated in sample 2. The higher countnumber of A,B,D and E is a result of the difference in read depth. If we plot a regression line through these points (red line) we get a more exact size factor that estimates only the difference in read depth and not the difference in expression of genes (If lots of genes are upregulated it is expected to find more mRNA's in a cell overall). In this hypothetical dataset the sizefactor calculated by the red line is 1.5.  This last method is what DESeq2 uses to estimate the size factor.
 
 
-```{r, echo = FALSE, fig.align='center', out.width='75%', fig.cap="Figure 8: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology"}
+```{r, echo = FALSE, fig.align='center', out.width='75%', fig.cap="Figure 9: estimation of size factor. Dots represent genes. Blue and red lines represent two ways of size factor esimation. source: Modern Statistics for Modern Biology"}
 szfcDemo = data.frame(
   x = c(2, 4, 6, 6,  8) * 10,
   y = c(3, 6, 2, 9, 12) * 10,
@@ -503,9 +492,9 @@ This is where the negative binomial distribution comes in. It accepts these para
 Before we can use this distribution however we do need to find out what these 2 parameters are. 
 The mean is simple enough but what about the dispersion parameter?
 
-Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then "shrinks" the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure x).
+Estimating dispersion of a gene is hard/impossible if you only have 3 samples per experiment group because n is too small. You would need quite alot of samples to accurately predict the dispersion and quite often you are working with data gathered by someone else so this is simply not an option. As a solution DESeq2 assumes genes of similar average expression have a similar dispersion (Love et al 2014). DEseq2 calculates the dispersion of individual genes and then calculates an average dispersion of genes that are expressed in simular quantities. It then "shrinks" the individual dispersions towards the average dispersion. To get a better understanding of this shrinking it is useful to plot the dispersion in your dataset (figure 10).
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 9: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 10: Plot of dispersion estimates of airway dataset. The black dots represent the dispersion calculated for a given gene (gene-wise estimate). the average dispersion of genes with simular expression (mean of counts) is calculated. A red line is fitted trough the average dispersions and the genes are shrunken toward the red line resulting in the blue dots. The blue dot represent the final estimated dispersion of a gene. The thicker blue dots in the uppermost part of the graph are considered outliers and for this reason they are not shrunk towards the fitted value."}
 
 ddsSE_airway <- DESeq2::DESeqDataSet(airway, design =  ~dex)
 keep <- rowSums(counts(ddsSE_airway)) >= 10
@@ -536,14 +525,14 @@ Annotating the results to show a gene-name instead of a ensembl ID will be cover
 
 ## Histogram of p-values
 
-The first plot is a histogram of p-values (figure 10). The left peak is the number of genes with a p < 0.01.
+The first plot is a histogram of p-values (figure 11). The left peak is the number of genes with a p < 0.01.
 This plot gives us the possibility to make a rough estimation of the False Discovery Rate (FDR). 
 Because we are looking at so many genes there are bound to be some genes that just happen to be differentially expressed. Looking at the area to the right of p > 0.05 we get an idea of the scale of this "background". 
 
 For example: If we look at the background we see that about 175-200 genes happen to have a p-value of 0.75. The same goes for most p-values > 0.10. So it is likely that about 175-200 genes in the left peak just happen to be differentially expressed regardless of the experimental condition. About 2900 genes in total have a p < 0.01. 
 200/2900 = 0.068. So about 7% of our differentially expressed genes are false positives (type I error). 
 
-```{r, fig.cap = "Figure 10: Histogram of P values for the airway dataset results."}
+```{r, fig.cap = "Figure 101 Histogram of P values for the airway dataset results."}
 res <- results(ddsDE_airway)
   
 ggplot(as(res, "data.frame"), aes(x = pvalue)) +
@@ -620,7 +609,7 @@ DESeq2::plotMA(resLFC_airway, main = "after lfc shrinkage", alpha = 0.05)
 Data can contain a lot of variables. Some might even be unknown to us. To get an idea of the variance in our data and what variables (principal components) are mainly responsible for this variance we can do a Principal Component Analysis (PCA). A principal component analysis tries to compress a big amount of data into a single point on a plot to show relations or clusters and what principal components cause these clusters.   
 
 
-```{r, fig.cap="Figure 11: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular."}
+```{r, fig.cap="Figure 12: PCA plot of airway dataset. The clusters show principal component 1 is the treatment variable explaining 40% of the variance in the data. Principal component 2 is the celllines explaining 27% of the variance. It looks like cellline N080611 is the odd one out and the other cellines are fairly simular."}
 #principal component analysis
 ddsDE_rlog_airway <- ddsDE_airway %>%
   rlogTransformation() 
@@ -632,20 +621,20 @@ ddsDE_rlog_airway %>%
   geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
 ```
 
-PCA compresses the data by reducing the dimensions in the data. A simple example of dimension reduction can be seen in figure 12 and 13. By rotating the line fitted through the data it can be compressed from 2 dimensions to 1 dimension while maintaining the component that cause the most variance in the 2 dimensions. 
+PCA compresses the data by reducing the dimensions in the data. A simple example of dimension reduction can be seen in figure 13 and 14. By rotating the line fitted through the data it can be compressed from 2 dimensions to 1 dimension while maintaining the component that cause the most variance in the 2 dimensions. 
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 12: Reads for 2 correlating samples. A principal component line is fitted through it and the datapoints are projected onto the line. Source: Modern Statistics for Modern Biology"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 13: Reads for 2 correlating samples. A principal component line is fitted through it and the datapoints are projected onto the line. Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "PCA1.png"))
 ```
 
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 13: The line is rotated so the red dots represent the 2 dimensional data (x and y) in 1 dimension (x). Source: Modern Statistics for Modern Biology"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 14: The line is rotated so the red dots represent the 2 dimensional data (x and y) in 1 dimension (x). Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "PCA2.png"))
 ```
 
 The one dimensional data can be described with an "eigenvalue". This value represents the variance introduced by a variable. The eigenvalues of a dataset can be plotted in a scree plot.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 14: A scree plot showing the eigenvalues of each dimension. Dimension 1 and 2 (PC1 and PC2) are responsible for most variance in the data so a 2 dimensional PCA plot can accurately portray the data. Source: Modern Statistics for Modern Biology"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='50%', fig.cap="Figure 15:A scree plot showing the eigenvalues of each dimension. Dimension 1 and 2 (PC1 and PC2) are responsible for most variance in the data so a 2 dimensional PCA plot can accurately portray the data. Source: Modern Statistics for Modern Biology"}
 knitr::include_graphics(path =here::here("images", "scree.png"))
 ```
 
@@ -656,13 +645,13 @@ If the eigenvalue of PC3 is about equal to the eigenvalue of PC2 it is not possi
 A much overlooked bias is the transcript length bias. This bias is the result of longer mRNA molecules being broken up into more fragments compared to shorter mRNA's. This results in overrepresentation of longer genes *within* samples. It is possible to correct for this within sample variation but doing so introduces variation between samples. Since we are usually interested in the differential expression of genes between samples we choose to leave the transcript length bias as is.   
 However it is important to be aware of its presence.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 15:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: Mortazavi 2008"}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 16:Transcript length bias. Both red and green mRNA's are present in equal amounts in the sample. After producing the cDNA library and mapping the reads to the genome the longer red gene becomes overrepresented. To correct for this overrepresentation a genes expression can be calculated as Reads Per Kilobase Million (RPKM). source: Mortazavi 2008"}
 knitr::include_graphics(path =here::here("images", "mortazavi2008_transcript_length_bias.jpg"))
 ```
 
 To get an idea of the scale of this bias in our dataset we can plot the genelength in basepairs versus the % differentially expressed.
 
-```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 16) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified."}
+```{r, echo=FALSE, include=TRUE, fig.align='center', out.width='100%', fig.cap="Figure 17) Left: Transcript length bias. Average bp length of all possible isoforms was calculated per gene. Genes were arranged by length and binned per 500 genes and the average genelength of each bin was calculated. The Y axis show the fraction of genes per bin that were differentially expressed. The DESeq2 results turn out to be slightly skewed towards the longer genes. Right: After performing a log fold shrink the bias becomes magnified."}
 
 #annotate airway dataset with transcript length to check for transcript length bias. 
 # Dit script moet nog even netter gemaakt worden. Niet alle namen zijn even duidelijk
