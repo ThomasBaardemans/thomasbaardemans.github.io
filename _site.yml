@@ -8,6 +8,8 @@ navbar:
       href: RNA_seq_method.html
     - text: "Python"
       href: python.html
+    - icon: fa-github
+      href: https://github.com/ThomasBaardemans 
     - icon: fa-linkedin
       href: https://nl.linkedin.com/in/thomas-baardemans 
 

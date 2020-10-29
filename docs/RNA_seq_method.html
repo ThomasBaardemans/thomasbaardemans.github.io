@@ -454,10 +454,19 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
+  <a href="RNA_seq_sars_cov_2.html">RNA-seq: SARS-CoV-2</a>
+</li>
+<li>
   <a href="RNA_seq_method.html">RNA-seq: Method</a>
 </li>
 <li>
   <a href="python.html">Python</a>
+</li>
+<li>
+  <a href="https://github.com/ThomasBaardemans">
+    <span class="fa fa-github"></span>
+     
+  </a>
 </li>
 <li>
   <a href="https://nl.linkedin.com/in/thomas-baardemans">
@@ -591,13 +600,13 @@ Figure 2: Ambiguous reads present a problem in assigning a read to specific isof
 <p>A binomial distribution works with boolean values: true/false, 0 or 1, fail or succes. The simplest example of a binomial distribution is the coin toss. Each “cointoss” is called a Bernoulli trial.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">#randomly generate 10 cointosses</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="kw">rbinom</span>(<span class="dt">n =</span> <span class="dv">10</span>, <span class="dt">size =</span> <span class="dv">1</span>, <span class="dt">prob =</span> <span class="fl">0.5</span>)</span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 0 1 1 1 0 0 0 0 1 1</span></span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">##  [1] 1 0 1 1 1 0 0 1 1 0</span></span></code></pre></div>
 <p>exercise: Use rbinom to simulate 100 <strong>double</strong> die rolls. Where throwing 6 is considered “succes” and everything below a “fail”. The results should show a “1” when a single 6 has been rolled and “2” when both die rolled a 6.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Answer:</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="kw">rbinom</span>(<span class="dv">100</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 0 0 0 1 1 1 0 1 1 1 2 1 0 1 0 0 1 1 0 2 0 1 0 0 0 1 2 0 0 0 0 1 0 0 1 0 0</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 0 0 0 1 1 0 1 0 0 0 0 0 0 1 0 0 0 0 1 0 0 1 2 1 0 1 0 0 1 1 1 0 0 2 0 1 0</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 1 0 1 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0</span></span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">##   [1] 1 0 0 0 0 0 1 0 0 1 0 0 0 0 1 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 1 1 0</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">##  [38] 1 2 1 0 0 1 0 1 0 0 0 1 1 0 0 1 1 0 0 0 2 0 0 0 0 0 1 0 1 0 0 0 1 0 0 0 0</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">##  [75] 0 0 0 1 0 1 0 1 0 1 0 0 0 0 0 1 1 0 0 0 0 0 0 1 1 2</span></span></code></pre></div>
 <p>To get complete distribution of probabilities we use dbinom. note: use rbinom to generate data (r stands for random in this case). use dbinom to generate a probability. This also works with other statistical distributions as we will see later on in the lesson.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">#probability that 6 is thrown twice.</span></span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="kw">dbinom</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dt">prob =</span> <span class="dv">1</span><span class="op">/</span><span class="dv">6</span>)</span>
@@ -799,25 +808,25 @@ Figure 6: Illustration of a V1 flying bomb. The V stands for ‘vergeltungswaffe
 <p><img src="RNA_seq_method_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="co">#calculate single datapoint for a single $\lambda$</span></span>
 <span id="cb15-2"><a href="#cb15-2"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="dv">95</span>)</span>
-<span id="cb15-3"><a href="#cb15-3"></a><span class="co">## [1] 0.04046425537</span></span></code></pre></div>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="co">## [1] 0.01637099699</span></span></code></pre></div>
 <p>After taking a look at the plot we decide the <span class="math inline">\(\lambda\)</span> must lie somewhere between 70 and 130. So we want to know what <span class="math inline">\(\lambda\)</span> between 70 and 130 is most likely for the first data point.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
-<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 0.0013497583719 0.0018572495317 0.0025088316095 0.0033287475058</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 0.0043402057292 0.0055636960296 0.0070151263773 0.0087039096907</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 0.0106311563075 0.0127881423349 0.0151552212073 0.0177013244876</span></span>
-<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 0.0203841589599 0.0231511535146 0.0259411464590 0.0286867382948</span></span>
-<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 0.0313171738892 0.0337615680940 0.0359522557305 0.0378280339692</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 0.0393370735987 0.0404393041941 0.0411081232359 0.0413313356742</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 0.0411112922003 0.0404642553682 0.0394190770640 0.0380153141644</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 0.0363009386265 0.0343298124592 0.0321590974305 0.0298467557336</span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 0.0274492739443 0.0250197118306 0.0226061434227 0.0202505235331</span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 0.0179879813926 0.0158465163419 0.0138470498761 0.0120037743484</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 0.0103247311601 0.0088125496671 0.0074652812977 0.0062772703121</span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 0.0052400119703 0.0043429594639 0.0035742517550 0.0029213446833</span></span>
-<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 0.0023715367373 0.0019123884179 0.0015320399696 0.0012194364460</span></span>
-<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 0.0009644717298 0.0007580644517 0.0005921790049 0.0004598042844</span></span>
-<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 0.0003549016495 0.0002723321338 0.0002077712896 0.0001576184071</span></span>
-<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 0.0001189052852</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="co">##  [1] 5.595979651e-06 9.525657995e-06 1.587115218e-05 2.589841897e-05</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="co">##  [5] 4.141289663e-05 6.492797256e-05 9.985938336e-05 1.507386947e-04</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a><span class="co">##  [9] 2.234338867e-04 3.253593766e-04 4.656521163e-04 6.552854772e-04</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a><span class="co">## [13] 9.070893743e-04 1.235644433e-03 1.657020773e-03 2.188338765e-03</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="co">## [17] 2.847140039e-03 3.650571807e-03 4.614405145e-03 5.751927012e-03</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">## [21] 7.072764315e-03 8.581714373e-03 1.027766734e-02 1.215271086e-02</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">## [25] 1.419150414e-02 1.637099699e-02 1.866055016e-02 2.102248709e-02</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">## [29] 2.341307663e-02 2.578391414e-02 2.808363681e-02 3.025988231e-02</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">## [33] 3.226137953e-02 3.404004851e-02 3.555298459e-02 3.676420998e-02</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">## [37] 3.764609251e-02 3.818035522e-02 3.835862978e-02 3.818253762e-02</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">## [41] 3.766331356e-02 3.682101499e-02 3.568338235e-02 3.428443363e-02</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">## [45] 3.266288528e-02 3.086049427e-02 2.892041189e-02 2.688563041e-02</span></span>
+<span id="cb16-14"><a href="#cb16-14"></a><span class="co">## [49] 2.479758929e-02 2.269499138e-02 2.061286139e-02 1.858186164e-02</span></span>
+<span id="cb16-15"><a href="#cb16-15"></a><span class="co">## [53] 1.662786382e-02 1.477176193e-02 1.302950089e-02 1.141228753e-02</span></span>
+<span id="cb16-16"><a href="#cb16-16"></a><span class="co">## [57] 9.926946724e-03 8.576383641e-03 7.360114601e-03 6.274831745e-03</span></span>
+<span id="cb16-17"><a href="#cb16-17"></a><span class="co">## [61] 5.314971498e-03</span></span>
 <span id="cb16-18"><a href="#cb16-18"></a></span>
 <span id="cb16-19"><a href="#cb16-19"></a>likelihood &lt;-<span class="st"> </span><span class="kw">dpois</span>(reads[<span class="dv">1</span>], <span class="dt">lambda =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">70</span>, <span class="dt">to =</span> <span class="dv">130</span>))</span>
 <span id="cb16-20"><a href="#cb16-20"></a>likelihood &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">likelihood =</span> likelihood)</span>
