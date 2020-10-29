@@ -1,0 +1,175 @@
+---
+title: "**RNA-seq: SARS-CoV-2**"
+author: "Thomas Baardemans"
+date: "22-6-2020"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    toc_depth: 3
+    toc_title: "Table of Contents"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, include = TRUE)
+```
+
+During my minor I attended an "Advanced Bioinformatics" course. For part of the exam each student was assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis.   
+
+# **Introduction**
+To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020 SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 ^[Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.] This analysis used the DESeq2 workflow by Love et al., 2014^[Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8]
+
+# **RNA-seq analysis**
+
+## loading/installing packages
+```{r, eval = FALSE, include = TRUE}
+#install libraries if not installed
+require("tidyverse") || utils::install.packages("tidyverse")
+require("pheatmap") || utils::install.packages("pheatmap")
+require("here") || utils::install.packages("here")
+BiocManager::install("GEOquery")
+BiocManager::install("DESeq2")
+```
+
+```{r}
+#load libraries
+library(tidyverse)
+library(GEOquery)
+library(rnaseqGene)
+library(pheatmap)
+library(here)
+```
+
+
+## Data downloading
+
+```{r}
+#Downloading expressionset and supplementary files.
+GSE147507 <- getGEO('GSE147507', destdir=".", GSEMatrix = TRUE)
+GSE147507_supp <- getGEOSuppFiles('GSE147507', makeDirectory = TRUE, baseDir = getwd(),
+  fetch_files = TRUE, filter_regex = NULL)
+
+#There is human and ferret data. We select the human data. 
+gse_human <- GSE147507[[1]]
+```
+
+Organizing and manipulating the data to make it suitable for building a sumarizedexperiment object
+```{r}
+# First we need to obtain the countsdata,phenodata,featuredata and metadata so they can be manipulated individually later.
+
+#We start with assay data (countsdata)
+raw_counts_human <- read_tsv(file = here::here("GSE147507", "GSE147507_RawReadCounts_Human.tsv.gz"))
+
+#obtaining phenotypic data. contains all the info regarding each sample. 
+phenodata_human <- pData(gse_human) %>% as_tibble
+
+#First column of raw_counts contains te genenames (featuredata)
+rowdata_human <- raw_counts_human$X1
+
+# lastly we collect the metadata 
+metadata <- experimentData(gse_human)
+
+#Next we select the samples that the assignment calls for
+coldata_human <- phenodata_human[21:26,]
+assaydata_human <- as.matrix(raw_counts_human[,22:27])
+rownames(assaydata_human) <- raw_counts_human$X1
+
+#changing the colname to treatment to make more sense
+colnames(coldata_human)[8] <- "treatment"
+```
+
+## Generating a summarizedexperiment 
+```{r}
+#Now we make a summarizedexperiment 
+se_human <- SummarizedExperiment(assays = assaydata_human,
+                     rowData = rowdata_human,
+                     colData = coldata_human)
+
+metadata(se_human)$metadata <- metadata #adding metadata manually because the summarizedexperiment won't accept it.
+
+# uncomment the next lines of code to inspect the assaydata, coldata and the metadata. 
+#colData(se_human)
+#metadata(se_human)
+#head(assay(se_human))
+```
+
+
+## Testing for differential expression using DESeq2
+```{r}
+#differential expression analysis. The only variable that is changed between samples is treatment with SARS-CoV-2 or mock treatment. 
+
+#make DESeq2 dataset
+ddsSE_human <- DESeq2::DESeqDataSet(se_human, design =  ~treatment)
+
+#filter all genes expressed less than 10 times.
+keep <- rowSums(counts(ddsSE_human)) >= 10
+ddsSE_human <- ddsSE_human[keep,]
+
+#run differential expression analysis
+ddsDE_human <- DESeq(ddsSE_human)
+```
+
+## Exploring the results
+```{r}
+#getting the results of the analysis
+res_human <- results(ddsDE_human)
+
+#show top genes
+res_human[order(res_human$padj), ] %>% head
+
+```
+
+```{r, fig.cap = "Histogram of p-values found in the results. Around 8000 genes have a p < 0.05 indicating they are differentially expressed. Looking at the background (p > 0.2) we can estimate that around 250 of 8000 genes are false positives (3%)."}
+# show distribution of p-values
+ggplot(as(res_human, "data.frame"), aes(x = pvalue)) +
+  geom_histogram(binwidth = 0.05, fill = "#446e9b")
+```
+
+```{r}
+#log fold change
+#get resultnames to input into LFC function
+resultsNames(ddsDE_human)
+
+#apply Log 2 fold change
+resLFC_human <- lfcShrink(ddsDE_human, coef="treatment_SARS.CoV.2.infected.A549.cells_vs_Mock.treated.A549.cells", type="apeglm")
+
+#make a vulcan plot
+DESeq2::plotMA(resLFC_human, ylim=c(-2,2))
+```
+
+
+```{r, fig.cap = "Principal component analysis shows the biggest variance in the data is between treated and mock treated cells (as is to be expected). There is also variance between treated cells but this only accounts for 4% of the variance in the data. The mock treated cells don't show much variance between themselves."}
+#principal component analysis
+ddsDE_rlog_human <- ddsDE_human %>%
+  rlogTransformation() 
+
+
+ddsDE_rlog_human %>%
+  DESeq2::plotPCA(intgroup = c("treatment")) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "red")
+```
+
+## Heatmap
+```{r, fig.cap = "top 20 of up and down regulated genes"}
+matrix_results <- assay(ddsDE_rlog_human)
+
+ind <- matrix_results %>%
+  rowMeans() %>%
+  order(decreasing = TRUE) 
+
+top20 <- matrix_results[ind[1:20],]
+heatmap <- pheatmap(top20,
+                    scale = "row")
+heatmap
+```
+
+# **Conclusion**
+Alot of genes in the A549 cells get up or down regulated when infected with the virus. Next steps would be to analyze the ferret data and analyzing what pathways the differentially expressed genes belong to.
+
+# **Bibliography**

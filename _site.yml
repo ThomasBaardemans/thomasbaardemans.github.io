@@ -2,6 +2,8 @@ name: "Thomas Baardemans"
 navbar:
   title: Thomas Baardemans
   right:
+    - text: "RNA-seq: SARS-CoV-2"
+      href: RNA_seq_sars_cov_2.html
     - text: "RNA-seq: Method"
       href: RNA_seq_method.html
     - text: "Python"
@@ -17,3 +19,5 @@ output:
     highlight: tango
     
 output_dir: "docs"
+
+

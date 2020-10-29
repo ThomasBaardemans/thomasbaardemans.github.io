@@ -159,7 +159,7 @@ dbinom(0:3, 2, prob = 1/6)
 
 
 ```{r, echo is false, include=TRUE, fig.cap="Figure 3: Barplot of probabilities throwing 0,1 or 2 sixes."}
-barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3)
+barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3,  col = "#446e9b")
 ```
 
 ## Poisson distribution 
@@ -167,7 +167,7 @@ barplot(dbinom(0:3, 2, prob = 1/6), names.arg = 0:3)
 When the probability of success p is small and the number of trials n large, the binomial distribution can be faithfully approximated by a simpler distribution, the Poisson distribution with rate parameter λ=np. (Recited from: Modern Statistics for Modern Biology^[Holmes, S., & Huber, W. (2019). Modern Statistics for Modern Biology (1st ed.) [E-book]. Cambridge University Press. https://www.huber.embl.de/msmb/])
 
 ```{r, fig.cap="figure 4: A barplot showing a Poisson distribution. k = number of occurences, P(X=k) = probability of succes given lambda"}
-barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#2780e3", xlab = "k", ylab = "P(X=k)")
+barplot(dpois(x = 0:12, lambda = 6), names.arg = 0:12, col = "#446e9b" , xlab = "k", ylab = "P(X=k)")
 ```
 
 If we look at figure 4 there is an event with a $\lambda$ of 6. $\lambda$ might represent the number of letters someone has received on average each day for the last month. If we were to look at the mail that arrived on a given day there is a chance of 0.04 (P) of us counting 2 ($\kappa$) pieces of mail. 
@@ -232,7 +232,7 @@ mutationprobability <- c(mutationprobability, 1-sum(mutationprobability))
 
 and  we can also plot these values to get a visual of the distribution
 ```{r, echo = FALSE, include = TRUE, fig.cap = "Figure 5: Distribution of mutations/kb for lambda = 0.307"}
-barplot(dpois(x = 0:4, lambda = 0.307), names.arg = 0:4, col = "#2780e3", xlab = "k", ylab = "P(X=k)")
+barplot(dpois(x = 0:4, lambda = 0.307), names.arg = 0:4,col = "#446e9b", xlab = "k", ylab = "P(X=k)")
 ```
 
 Now we know the distribution that we would expect if the DNA mutationrate follows a Poisson distribution (figure 5) we can compare it against our observed data. After fragmenting our hypothetical sample DNA into 1kb pieces and sequencing them we get the following results:
@@ -322,7 +322,7 @@ So far we have used a top-down approach. We had a big dataset with a known $\lam
 reads <- rpois(n = 40, lambda = 100)
 
 ggplot(data = data.frame(reads = reads), aes(x = reads)) + 
-  geom_histogram(bins = 40)
+  geom_histogram(bins = 40,  fill = "#446e9b")
 ```
 
 
@@ -342,7 +342,7 @@ likelihood <- dpois(reads[1], lambda = seq(from = 70, to = 130))
 likelihood <- data.frame(likelihood = likelihood)
 
 ggplot(data = likelihood, aes(x = seq(from = 70, to = 130), y = likelihood)) +
-  geom_point()
+  geom_point(colour = "#446e9b")
 ```
 
 As you can see there are a lot of small numbers. Because these numbers sometimes need to be multiplied later on in the estimation process we use a log transform. This transform is done because multiplying very small numbers soon become smaller than the CPU of the computer can represent in its memory (arithmatic underflow). To do this we can simply add "log = TRUE" to the dpois function. 
@@ -352,7 +352,7 @@ log_likelihood <- dpois(reads[1], lambda = seq(from = 70, to = 130), log = TRUE)
 log_likelihood <- data.frame(log_likelihood = log_likelihood)
 
 ggplot(data = log_likelihood, aes(x = seq(from = 70, to = 130), y = log_likelihood)) +
-  geom_point() +
+  geom_point(colour = "#446e9b") +
   xlab("lambda")
 ```
 
@@ -380,7 +380,7 @@ And plot the results with a red line showing the most likely estimate of $\lambd
 
 ```{r}
 ggplot(data = all_data_log_likelihood, aes(x = lambda, y = all_data_log_likelihood)) +
-  geom_point() +
+  geom_point(colour = "#446e9b") +
   geom_vline(xintercept = all_data_log_likelihood$lambda[which.max(all_data_log_likelihood$all_data_log_likelihood)], color="red",size=2) +
   ylab("probability")
 ```
@@ -536,7 +536,7 @@ For example: If we look at the background we see that about 175-200 genes happen
 res <- results(ddsDE_airway)
   
 ggplot(as(res, "data.frame"), aes(x = pvalue)) +
-  geom_histogram(binwidth = 0.01, fill = "Royalblue", boundary = 0)
+  geom_histogram(binwidth = 0.01,  fill = "#446e9b", boundary = 0)
 ```
 
 

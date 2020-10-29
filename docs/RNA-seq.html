@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Thomas Baardemans" />
+
+
+<title>RNA-seq: SARS-CoV-2</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/spacelab.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/accessible-code-block-0.0.1/empty-anchor.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 52px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.section h2 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.section h3 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.section h4 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.section h5 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.section h6 {
+  padding-top: 57px;
+  margin-top: -57px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Thomas Baardemans</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="RNA_seq_method.html">RNA-seq: Method</a>
+</li>
+<li>
+  <a href="python.html">Python</a>
+</li>
+<li>
+  <a href="https://nl.linkedin.com/in/thomas-baardemans">
+    <span class="fa fa-linkedin"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore"><strong>RNA-seq: SARS-CoV-2</strong></h1>
+<h4 class="author">Thomas Baardemans</h4>
+<h4 class="date">22-6-2020</h4>
+
+</div>
+
+
+<div id="foreword" class="section level2">
+<h2><span class="header-section-number">0.1</span> Foreword</h2>
+<p>During my minor I attended an “Advanced Bioinformatics” course. For the exam each student got assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis.</p>
+</div>
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> <em>Introduction</em></h1>
+<p>To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020 SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 (^Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, <a href="https://doi.org/10.1016/j.cell.2020.04.026" class="uri">https://doi.org/10.1016/j.cell.2020.04.026</a>.) This analysis used the DESeq2 workflow by Love et al., 2014(^ Love, M.I., Huber, W. &amp; Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). <a href="https://doi.org/10.1186/s13059-014-0550-8" class="uri">https://doi.org/10.1186/s13059-014-0550-8</a>)</p>
+</div>
+<div id="rna-seq-analysis" class="section level1">
+<h1><span class="header-section-number">2</span> <em>RNA-seq analysis</em></h1>
+<div id="loadinginstalling-packages" class="section level2">
+<h2><span class="header-section-number">2.1</span> loading/installing packages</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">#install libraries if not installed</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">require</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="op">||</span><span class="st"> </span>utils<span class="op">::</span><span class="kw">install.packages</span>(<span class="st">&quot;tidyverse&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">require</span>(<span class="st">&quot;pheatmap&quot;</span>) <span class="op">||</span><span class="st"> </span>utils<span class="op">::</span><span class="kw">install.packages</span>(<span class="st">&quot;pheatmap&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">require</span>(<span class="st">&quot;here&quot;</span>) <span class="op">||</span><span class="st"> </span>utils<span class="op">::</span><span class="kw">install.packages</span>(<span class="st">&quot;here&quot;</span>)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>BiocManager<span class="op">::</span><span class="kw">install</span>(<span class="st">&quot;GEOquery&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6"></a>BiocManager<span class="op">::</span><span class="kw">install</span>(<span class="st">&quot;DESeq2&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co">#load libraries</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(tidyverse)</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="kw">library</span>(GEOquery)</span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">library</span>(rnaseqGene)</span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="kw">library</span>(pheatmap)</span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="kw">library</span>(here)</span></code></pre></div>
+</div>
+<div id="data-downloading" class="section level2">
+<h2><span class="header-section-number">2.2</span> Data downloading</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">#Downloading expressionset and supplementary files.</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>GSE147507 &lt;-<span class="st"> </span><span class="kw">getGEO</span>(<span class="st">&#39;GSE147507&#39;</span>, <span class="dt">destdir=</span><span class="st">&quot;.&quot;</span>, <span class="dt">GSEMatrix =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>GSE147507_supp &lt;-<span class="st"> </span><span class="kw">getGEOSuppFiles</span>(<span class="st">&#39;GSE147507&#39;</span>, <span class="dt">makeDirectory =</span> <span class="ot">TRUE</span>, <span class="dt">baseDir =</span> <span class="kw">getwd</span>(),</span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="dt">fetch_files =</span> <span class="ot">TRUE</span>, <span class="dt">filter_regex =</span> <span class="ot">NULL</span>)</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#There is human and ferret data. We select the human data. </span></span>
+<span id="cb3-7"><a href="#cb3-7"></a>gse_human &lt;-<span class="st"> </span>GSE147507[[<span class="dv">1</span>]]</span></code></pre></div>
+<p>Organizing and manipulating the data to make it suitable for building a sumarizedexperiment object</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># First we need to obtain the countsdata,phenodata,featuredata and metadata so they can be manipulated individually later.</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">#We start with assay data (countsdata)</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>raw_counts_human &lt;-<span class="st"> </span><span class="kw">read_tsv</span>(<span class="dt">file =</span> here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;GSE147507&quot;</span>, <span class="st">&quot;GSE147507_RawReadCounts_Human.tsv.gz&quot;</span>))</span>
+<span id="cb4-5"><a href="#cb4-5"></a></span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="co">#obtaining phenotypic data. contains all the info regarding each sample. </span></span>
+<span id="cb4-7"><a href="#cb4-7"></a>phenodata_human &lt;-<span class="st"> </span><span class="kw">pData</span>(gse_human) <span class="op">%&gt;%</span><span class="st"> </span>as_tibble</span>
+<span id="cb4-8"><a href="#cb4-8"></a></span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#First column of raw_counts contains te genenames (featuredata)</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a>rowdata_human &lt;-<span class="st"> </span>raw_counts_human<span class="op">$</span>X1</span>
+<span id="cb4-11"><a href="#cb4-11"></a></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="co"># lastly we collect the metadata </span></span>
+<span id="cb4-13"><a href="#cb4-13"></a>metadata &lt;-<span class="st"> </span><span class="kw">experimentData</span>(gse_human)</span>
+<span id="cb4-14"><a href="#cb4-14"></a></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#Next we select the samples that the assignment calls for</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a>coldata_human &lt;-<span class="st"> </span>phenodata_human[<span class="dv">21</span><span class="op">:</span><span class="dv">26</span>,]</span>
+<span id="cb4-17"><a href="#cb4-17"></a>assaydata_human &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(raw_counts_human[,<span class="dv">22</span><span class="op">:</span><span class="dv">27</span>])</span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="kw">rownames</span>(assaydata_human) &lt;-<span class="st"> </span>raw_counts_human<span class="op">$</span>X1</span>
+<span id="cb4-19"><a href="#cb4-19"></a></span>
+<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#changing the colname to treatment to make more sense</span></span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="kw">colnames</span>(coldata_human)[<span class="dv">8</span>] &lt;-<span class="st"> &quot;treatment&quot;</span></span></code></pre></div>
+</div>
+<div id="generating-a-summarizedexperiment" class="section level2">
+<h2><span class="header-section-number">2.3</span> Generating a summarizedexperiment</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#Now we make a summarizedexperiment </span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>se_human &lt;-<span class="st"> </span><span class="kw">SummarizedExperiment</span>(<span class="dt">assays =</span> assaydata_human,</span>
+<span id="cb5-3"><a href="#cb5-3"></a>                     <span class="dt">rowData =</span> rowdata_human,</span>
+<span id="cb5-4"><a href="#cb5-4"></a>                     <span class="dt">colData =</span> coldata_human)</span>
+<span id="cb5-5"><a href="#cb5-5"></a></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="kw">metadata</span>(se_human)<span class="op">$</span>metadata &lt;-<span class="st"> </span>metadata <span class="co">#adding metadata manually because the summarizedexperiment won&#39;t accept it.</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co"># uncomment the next lines of code to inspect the assaydata, coldata and the metadata. </span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#colData(se_human)</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#metadata(se_human)</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#head(assay(se_human))</span></span></code></pre></div>
+</div>
+<div id="testing-for-differential-expression-using-deseq2" class="section level2">
+<h2><span class="header-section-number">2.4</span> Testing for differential expression using DESeq2</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">#differential expression analysis. The only variable that is changed between samples is treatment with SARS-CoV-2 or mock treatment. </span></span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#make DESeq2 dataset</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a>ddsSE_human &lt;-<span class="st"> </span>DESeq2<span class="op">::</span><span class="kw">DESeqDataSet</span>(se_human, <span class="dt">design =</span>  <span class="op">~</span>treatment)</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#filter all genes expressed less than 10 times.</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a>keep &lt;-<span class="st"> </span><span class="kw">rowSums</span>(<span class="kw">counts</span>(ddsSE_human)) <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>ddsSE_human &lt;-<span class="st"> </span>ddsSE_human[keep,]</span>
+<span id="cb6-9"><a href="#cb6-9"></a></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#run differential expression analysis</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a>ddsDE_human &lt;-<span class="st"> </span><span class="kw">DESeq</span>(ddsSE_human)</span></code></pre></div>
+</div>
+<div id="exploring-the-results" class="section level2">
+<h2><span class="header-section-number">2.5</span> Exploring the results</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co">#getting the results of the analysis</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>res_human &lt;-<span class="st"> </span><span class="kw">results</span>(ddsDE_human)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="co">#show top genes</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>res_human[<span class="kw">order</span>(res_human<span class="op">$</span>padj), ] <span class="op">%&gt;%</span><span class="st"> </span>head</span></code></pre></div>
+<pre><code>## log2 fold change (MLE): treatment SARS.CoV.2.infected.A549.cells vs Mock.treated.A549.cells 
+## Wald test p-value: treatment SARS.CoV.2.infected.A549.cells vs Mock.treated.A549.cells 
+## DataFrame with 6 rows and 6 columns
+##           baseMean log2FoldChange     lfcSE      stat       pvalue         padj
+##          &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;    &lt;numeric&gt;    &lt;numeric&gt;
+## STC2       3472.80        4.01354 0.1010409   39.7220  0.00000e+00  0.00000e+00
+## LAMC2      5759.16        3.70298 0.1111528   33.3144 2.39231e-243 1.73407e-239
+## GPX2       8870.38       -2.78196 0.0859739  -32.3582 1.06402e-229 5.14171e-226
+## C15orf48   2601.42        2.74951 0.0894554   30.7361 1.87631e-207 6.80022e-204
+## FASN       6880.20       -2.26011 0.0751377  -30.0796 8.95395e-199 2.59611e-195
+## KRT8      41319.54       -2.23441 0.0773697  -28.8797 2.14952e-183 5.19359e-180</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># show distribution of p-values</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="kw">ggplot</span>(<span class="kw">as</span>(res_human, <span class="st">&quot;data.frame&quot;</span>), <span class="kw">aes</span>(<span class="dt">x =</span> pvalue)) <span class="op">+</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="fl">0.05</span>, <span class="dt">fill =</span> <span class="st">&quot;#446e9b&quot;</span>)</span></code></pre></div>
+<p><img src="RNA-seq_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co">#log fold change</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="co">#get resultnames to input into LFC function</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="kw">resultsNames</span>(ddsDE_human)</span></code></pre></div>
+<pre><code>## [1] &quot;Intercept&quot;                                                          
+## [2] &quot;treatment_SARS.CoV.2.infected.A549.cells_vs_Mock.treated.A549.cells&quot;</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co">#apply Log 2 fold change</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>resLFC_human &lt;-<span class="st"> </span><span class="kw">lfcShrink</span>(ddsDE_human, <span class="dt">coef=</span><span class="st">&quot;treatment_SARS.CoV.2.infected.A549.cells_vs_Mock.treated.A549.cells&quot;</span>, <span class="dt">type=</span><span class="st">&quot;apeglm&quot;</span>)</span>
+<span id="cb12-3"><a href="#cb12-3"></a></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#make a vulcan plot</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a>DESeq2<span class="op">::</span><span class="kw">plotMA</span>(resLFC_human, <span class="dt">ylim=</span><span class="kw">c</span>(<span class="op">-</span><span class="dv">2</span>,<span class="dv">2</span>))</span></code></pre></div>
+<p><img src="RNA-seq_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Principal component analysis shows the biggest variance between treated and mock treated cells (as is to be expected). There is also variance between treated cells. The mock treated cells dont show much variance between themselves.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co">#principal component analysis</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>ddsDE_rlog_human &lt;-<span class="st"> </span>ddsDE_human <span class="op">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="st">  </span><span class="kw">rlogTransformation</span>() </span>
+<span id="cb13-4"><a href="#cb13-4"></a></span>
+<span id="cb13-5"><a href="#cb13-5"></a></span>
+<span id="cb13-6"><a href="#cb13-6"></a>ddsDE_rlog_human <span class="op">%&gt;%</span></span>
+<span id="cb13-7"><a href="#cb13-7"></a><span class="st">  </span>DESeq2<span class="op">::</span><span class="kw">plotPCA</span>(<span class="dt">intgroup =</span> <span class="kw">c</span>(<span class="st">&quot;treatment&quot;</span>)) <span class="op">+</span></span>
+<span id="cb13-8"><a href="#cb13-8"></a><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="dv">0</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">colour =</span> <span class="st">&quot;red&quot;</span>) <span class="op">+</span></span>
+<span id="cb13-9"><a href="#cb13-9"></a><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">colour =</span> <span class="st">&quot;red&quot;</span>)</span></code></pre></div>
+<p><img src="RNA-seq_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div id="heatmaps" class="section level2">
+<h2><span class="header-section-number">2.6</span> Heatmaps</h2>
+<p>top 100 of up and down regulated genes (no annotation needed since the gene names were already in the raw counts data)</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>matrix_results &lt;-<span class="st"> </span><span class="kw">assay</span>(ddsDE_rlog_human)</span>
+<span id="cb14-2"><a href="#cb14-2"></a></span>
+<span id="cb14-3"><a href="#cb14-3"></a>ind &lt;-<span class="st"> </span>matrix_results <span class="op">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="st">  </span><span class="kw">rowMeans</span>() <span class="op">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="st">  </span><span class="kw">order</span>(<span class="dt">decreasing =</span> <span class="ot">TRUE</span>) </span>
+<span id="cb14-6"><a href="#cb14-6"></a></span>
+<span id="cb14-7"><a href="#cb14-7"></a>top100 &lt;-<span class="st"> </span>matrix_results[ind[<span class="dv">1</span><span class="op">:</span><span class="dv">100</span>],]</span>
+<span id="cb14-8"><a href="#cb14-8"></a></span>
+<span id="cb14-9"><a href="#cb14-9"></a>heatmap &lt;-<span class="st"> </span><span class="kw">pheatmap</span>(top100,</span>
+<span id="cb14-10"><a href="#cb14-10"></a>                    <span class="dt">scale =</span> <span class="st">&quot;row&quot;</span>)</span>
+<span id="cb14-11"><a href="#cb14-11"></a>heatmap</span></code></pre></div>
+<p><img src="RNA-seq_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>top 20 of up and down regulated genes</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>matrix_results &lt;-<span class="st"> </span><span class="kw">assay</span>(ddsDE_rlog_human)</span>
+<span id="cb15-2"><a href="#cb15-2"></a></span>
+<span id="cb15-3"><a href="#cb15-3"></a>ind &lt;-<span class="st"> </span>matrix_results <span class="op">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="st">  </span><span class="kw">rowMeans</span>() <span class="op">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="st">  </span><span class="kw">order</span>(<span class="dt">decreasing =</span> <span class="ot">TRUE</span>) </span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a>top20 &lt;-<span class="st"> </span>matrix_results[ind[<span class="dv">1</span><span class="op">:</span><span class="dv">20</span>],]</span>
+<span id="cb15-8"><a href="#cb15-8"></a>heatmap &lt;-<span class="st"> </span><span class="kw">pheatmap</span>(top20,</span>
+<span id="cb15-9"><a href="#cb15-9"></a>                    <span class="dt">scale =</span> <span class="st">&quot;row&quot;</span>)</span>
+<span id="cb15-10"><a href="#cb15-10"></a>heatmap</span></code></pre></div>
+<p><img src="RNA-seq_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1><span class="header-section-number">3</span> Conclusion</h1>
+<p>Alot of genes in the A549 cells get up or down regulated when infected with the virus. Next steps would be to analyze the other data available in this set. For example the human biopts and the ferret data would be usefull to compare this data to.</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
