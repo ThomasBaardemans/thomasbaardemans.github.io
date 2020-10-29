@@ -3,7 +3,7 @@ navbar:
   title: Thomas Baardemans
   right:
     - text: "RNA-seq: Method"
-      href: Advanced_Bioinformatics_DESeq2.html
+      href: RNA_seq_method.html
     - text: "Python"
       href: python.html
     - icon: fa-linkedin
