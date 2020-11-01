@@ -1,2 +1,4 @@
 # thomasbaardemans.github.io
-Portfolio website
+
+My portfolio website. 
+Visit https://thomasbaardemans.github.io/ to see the result.

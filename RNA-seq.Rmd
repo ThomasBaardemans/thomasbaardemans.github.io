@@ -20,7 +20,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, include = TRUE)
 ```
 #Foreword
-During my minor I attended an "Advanced Bioinformatics" course. For the exam each student got assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis.   
+During my minor I attended an "Advanced Bioinformatics" course. For the exam each student got assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis on.   
 
 # Introduction
 To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020	SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 (^Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.) This analysis used the DESeq2 workflow by Love et al., 2014(^ Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8)
