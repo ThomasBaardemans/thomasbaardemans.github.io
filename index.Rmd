@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r, echo=FALSE, include=TRUE, out.width='20%', out.extra='style="float:right; padding:10px"'}
-knitr::include_graphics(path = here::here("images", "photo_2020_11_11_alpha.png"))
+knitr::include_graphics(path = here::here("images", "photo_2020_11_11_alpha_compressed.png"))
 ```
   
 
