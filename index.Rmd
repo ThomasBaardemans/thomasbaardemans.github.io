@@ -29,12 +29,11 @@ The highlights of my education so far include:
 *Location:* **Utrecht, Netherlands**  
 *Mail:* **thomas.baardemans at gmail.com**]{style="float:right; text-align: right"}   
 These were mostly centered around the R language and ranged from  
-basic data analysis to interpretation of RNA-seq results. I use Shiny to develop
-applications and hope to use this together with python in the lab to develop  
+basic data analysis to interpretation of RNA-seq results. I use Shiny for application development and hope to use this together with python in the lab to develop  
 data-acquisition tools/scripts. 
 
-
 For a more in-depth review of my experience so far please contact me on linkedin or by email.
+
 
 
     
