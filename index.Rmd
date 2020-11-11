@@ -12,8 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r, echo=FALSE, include=TRUE, out.width='25%', out.extra='style="float:right; padding:10px"'}
-knitr::include_graphics(path = here::here("images", "portrait_hex.png"))
+```{r, echo=FALSE, include=TRUE, out.width='20%', out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics(path = here::here("images", "photo_2020_11_11_alpha.png"))
 ```
   
 
@@ -34,7 +34,7 @@ applications and hope to use this together with python in the lab to develop
 data-acquisition tools/scripts. 
 
 
-For a more in-depth review of my experience so far please contact me on linkedin or email.
+For a more in-depth review of my experience so far please contact me on linkedin or by email.
 
 
     
