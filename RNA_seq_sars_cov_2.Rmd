@@ -28,28 +28,35 @@ To study the effect of SARS-COV2 on the transcription of genes A549 cell lines w
 
 ## loading/installing packages
 ```{r, eval = FALSE, include = TRUE}
-#install libraries if not installed
+#install bioconductor if it's not installed yet.
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(version = "3.12")
+
+#install libraries if they are not installed yet
 require("tidyverse") || utils::install.packages("tidyverse")
 require("pheatmap") || utils::install.packages("pheatmap")
 require("here") || utils::install.packages("here")
 BiocManager::install("GEOquery")
 BiocManager::install("DESeq2")
+BiocManager::install("SummarizedExperiment")
 ```
 
 ```{r}
 #load libraries
 library(tidyverse)
 library(GEOquery)
-library(rnaseqGene)
+#library(rnaseqGene)
 library(pheatmap)
 library(here)
+library(SummarizedExperiment)
 ```
 
 
-## Data downloading
+## Data downloading and organizing. 
 
 ```{r}
-#Downloading expressionset and supplementary files.
+#Downloading expressionset and supplementary files from GEO.
 GSE147507 <- getGEO('GSE147507', destdir=".", GSEMatrix = TRUE)
 GSE147507_supp <- getGEOSuppFiles('GSE147507', makeDirectory = TRUE, baseDir = getwd(),
   fetch_files = TRUE, filter_regex = NULL)
@@ -74,7 +81,7 @@ rowdata_human <- raw_counts_human$X1
 # lastly we collect the metadata 
 metadata <- experimentData(gse_human)
 
-#Next we select the samples that the assignment calls for
+#Next we select the samples that the assignment calls for ("GSE147507: GSM4462336, GSM4462337, GSM4462338, GSM4462339, GSM4462340, GSM4462341)
 coldata_human <- phenodata_human[21:26,]
 assaydata_human <- as.matrix(raw_counts_human[,22:27])
 rownames(assaydata_human) <- raw_counts_human$X1
@@ -93,6 +100,7 @@ se_human <- SummarizedExperiment(assays = assaydata_human,
 metadata(se_human)$metadata <- metadata #adding metadata manually because the summarizedexperiment won't accept it.
 
 # uncomment the next lines of code to inspect the assaydata, coldata and the metadata. 
+
 #colData(se_human)
 #metadata(se_human)
 #head(assay(se_human))
@@ -110,7 +118,6 @@ ddsSE_human <- DESeq2::DESeqDataSet(se_human, design =  ~treatment)
 keep <- rowSums(counts(ddsSE_human)) >= 10
 ddsSE_human <- ddsSE_human[keep,]
 
-#run differential expression analysis
 ddsDE_human <- DESeq(ddsSE_human)
 ```
 
