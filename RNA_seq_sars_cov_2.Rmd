@@ -49,7 +49,7 @@ BiocManager::install("SummarizedExperiment")
 #load libraries
 library(tidyverse)
 library(GEOquery)
-#library(rnaseqGene)
+library(DESeq2)
 library(pheatmap)
 library(here)
 library(SummarizedExperiment)
