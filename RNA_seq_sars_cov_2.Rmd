@@ -19,10 +19,13 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, include = TRUE)
 ```
 
-During my minor I attended an "Advanced Bioinformatics" course. For part of the exam each student was assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis.   
+During my minor I attended an "Advanced Bioinformatics" course. For part of the exam each student was assigned a subset of samples from a GEO dataset to perform a RNA-seq differential expression analysis. This report uses samples from from Blanco-Melo et al., 2020 ^[Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.] This analysis used the DESeq2 workflow by Love et al., 2014^[Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8]
+
 
 # **Introduction**
-To study the effect of SARS-COV2 on the transcription of genes A549 cell lines were infected with USA-WA1/2020 SARS-COV2 virus or mock treated. This report uses data from Blanco-Melo et al., 2020 ^[Daniel Blanco-Melo et al., “Imbalanced Host Response to SARS-CoV-2 Drives Development of COVID-19,” Cell 181, no. 5 (May 2020): 1036-1045.e9, https://doi.org/10.1016/j.cell.2020.04.026.] This analysis used the DESeq2 workflow by Love et al., 2014^[Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8]
+To study the effect of SARS-COV2 on the transcription of genes A549 human cell lines were infected with USA-WA1/2020 SARS-COV2 virus or mock treated. 
+The Illumina NextSeq 500 platform was used to sequence the cDNA library. The reads were aligned to the human reference genome (hg19) using a RNA-Seq Aligment App on Basespace. The resulting table containing the readcounts was uploaded to GEO and serves as a starting point for this analysis. 
+
 
 # **RNA-seq analysis**
 
@@ -118,6 +121,7 @@ ddsSE_human <- DESeq2::DESeqDataSet(se_human, design =  ~treatment)
 keep <- rowSums(counts(ddsSE_human)) >= 10
 ddsSE_human <- ddsSE_human[keep,]
 
+#perform DESeq2 analysis
 ddsDE_human <- DESeq(ddsSE_human)
 ```
 
@@ -128,16 +132,15 @@ res_human <- results(ddsDE_human)
 
 #show top genes
 res_human[order(res_human$padj), ] %>% head
-
 ```
 
-```{r, fig.cap = "Histogram of p-values found in the results. Around 8000 genes have a p < 0.05 indicating they are differentially expressed. Looking at the background (p > 0.2) we can estimate that around 250 of 8000 genes are false positives (3%)."}
+```{r, fig.cap = "Histogram of p-values found in the results. Around 8000 genes have a p < 0.05 indicating they are differentially expressed. Looking at the background (p > 0.2) we can estimate that around 250 out of 8000 differentially expressed genes are false positives (3%)."}
 # show distribution of p-values
 ggplot(as(res_human, "data.frame"), aes(x = pvalue)) +
   geom_histogram(binwidth = 0.05, fill = "#446e9b")
 ```
 
-```{r}
+```{r, fig.cap = "MA plot. Blue dots represent differentially expressed genes"}
 #log fold change
 #get resultnames to input into LFC function
 resultsNames(ddsDE_human)
@@ -163,7 +166,7 @@ ddsDE_rlog_human %>%
 ```
 
 ## Heatmap
-```{r, fig.cap = "top 20 of up and down regulated genes"}
+```{r, fig.cap = "Heatmap clustering of top 20 of up and down regulated genes."}
 matrix_results <- assay(ddsDE_rlog_human)
 
 ind <- matrix_results %>%
@@ -177,6 +180,6 @@ heatmap
 ```
 
 # **Conclusion**
-Alot of genes in the A549 cells get up or down regulated when infected with the virus. Next steps would be to analyze the ferret data and analyzing what pathways the differentially expressed genes belong to.
+Alot of genes in the A549 cells get up or down regulated when infected with the virus. analyzing what pathways are associated with the differentially expressed genes belong to.
 
 # **Bibliography**
